@@ -74,7 +74,7 @@ int main()
 
     }
 
-    else if(pid>0)
+    if(pid>0) //final wait, everyone use recursively wait
     {
         //printf("Parent %d waiting for its child \n",getpid());
         wait(NULL);

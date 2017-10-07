@@ -4,7 +4,17 @@
 #include <sys/shm.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+/*
+    fork diagram should be
 
+        main
+          |  fork1
+        child1
+        /   \
+    child2  child3
+     |        |
+    child4  child5
+*/
 
 int main()
 {
@@ -12,10 +22,10 @@ int main()
     int parent_pid,child_pid;
     printf("Main function start : pid= %d \n",getpid());
 
-    pid_t pid;
+    pid_t pid=0,pid2=0,pid3=0;
     printf("------------------#%d Fork executes! \n",fork_cnt+1);
     parent_pid=getpid();
-    pid=fork(); //fork1 to get child return child ID and itself
+    pid=fork(); //fork1 to get child1 return child ID and itself
     fork_cnt++;
     child_pid=getpid();
     if(pid<0)
@@ -23,27 +33,21 @@ int main()
         fprintf(stderr, "Fork failed\n");
         return 1;
     }
-    else if(pid==0)
+    else if(pid==0) //for child1 to execute
+    {
         printf("Fork %d. I'm the child %d, my parent is %d.\n",fork_cnt,child_pid,parent_pid); //use getpid to get MY OWN PROCESS ID (ex: 666 in child self, however, return 0 to parent)
 
-    /*----------fork1 ends fork 2 starts-----------*/
-    if(pid<0)
-    {
-        fprintf(stderr, "Fork failed\n");
-        return 1;
-    }
-    else if(pid==0)
-    {
+
         printf("------------------#%d Fork executes! \n",fork_cnt+1);
         parent_pid=getpid();
-        pid=fork(); //fork2 update pid
+        pid2=fork(); //fork2
         fork_cnt++;
         child_pid=getpid();
 
-        if(pid==0) //after fork, print child only
+        if(pid2==0) //after fork, print child only
             printf("Fork %d. I'm the child %d, my parent is %d.\n",fork_cnt,child_pid,parent_pid);
 
-        if(pid>0) //since former main function does not enter this loop, second loop will still not come in
+        else if(pid2>0) //since former main function does not enter this loop, second loop will still not come in
         {
             printf("------------------#%d Fork executes! \n",fork_cnt);
             parent_pid=getpid();
@@ -54,7 +58,6 @@ int main()
                 printf("Fork %d. I'm the child %d, my parent is %d.\n",fork_cnt,child_pid,parent_pid);
         }
     }
-
     /*----------fork2 ends fork 3 starts-----------*/
     if(pid<0)
     {

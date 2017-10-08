@@ -9,11 +9,11 @@
     fork diagram should be
 
         main
-          |  fork1
+          |  fork1 (in hw is fork1)
         child1
-fork2    /   \  fork 3
+fork2    /   \  fork 3 (in hw is fork2)
     child2  child3
-fork4 |        | fork4
+fork4 |        | fork5 (in hw is fork3)
     child4  child5
 */
 

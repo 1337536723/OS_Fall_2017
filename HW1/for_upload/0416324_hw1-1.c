@@ -73,7 +73,7 @@ int main()
                     {
                         //printf("Process %d wait for its child \n",getpid());
                         wait(NULL);
-                        printf("Process %d 's child terminated \n",getpid());
+                        //printf("Process %d 's child terminated \n",getpid());
                     }
                     exit(EXIT_SUCCESS);
 
@@ -115,7 +115,7 @@ int main()
                         {
                             ////printf("Process %d wait for its child \n",getpid());
                             wait(NULL);
-                            printf("Process %d 's child terminated \n",getpid());
+                            //printf("Process %d 's child terminated \n",getpid());
                         }
                         exit(EXIT_SUCCESS);
                     }
@@ -126,11 +126,11 @@ int main()
                 //child1 wait for both child2 and child3
                 //printf("Process %d wait for its child \n",getpid());
                 wait(NULL);
-                printf("Process %d 's child terminated \n",getpid());
+                //printf("Process %d 's child terminated \n",getpid());
 
                 //printf("Process %d wait for its child \n",getpid());
                 wait(NULL);
-                printf("Process %d 's child terminated \n",getpid());
+                //printf("Process %d 's child terminated \n",getpid());
                 exit(EXIT_SUCCESS);
             }
 
@@ -140,7 +140,7 @@ int main()
     {
         //printf("Process %d wait for its child \n",getpid());
         wait(NULL);
-        printf("Process %d 's child terminated \n",getpid());
+        //printf("Process %d 's child terminated \n",getpid());
     }
 
     return 0;

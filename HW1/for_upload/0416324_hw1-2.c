@@ -19,7 +19,7 @@ int main()
 {
     unsigned int dim,tmp;
     UNT sum=0;
-    printf("Please enter the dimension of 2 square matrices:  ");
+    printf("Dimension: ");
     scanf("%d",&dim);
 
     //shared memory allocation
@@ -56,7 +56,7 @@ int main()
     printf("4-process, checksum = %u \n",sum);
     printf("elapsed %f ms\n", sec2*1000+(usec2/1000.0));
 
-    printf("Acceleration rate = %f\n",(sec*1000+(usec/1000.0))/(sec2*1000+(usec2/1000.0)));
+    //printf("Acceleration rate = %f\n",(sec*1000+(usec/1000.0))/(sec2*1000+(usec2/1000.0)));
     return 0;
 }
 UNT one_process(UNT* shm_addr_a,UNT* shm_addr_b,int dim)

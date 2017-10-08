@@ -8,114 +8,92 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <time.h>
-
-unsigned long long int one_process(int**,int**,int);
-unsigned long long int four_process(int**,int**,int);
-unsigned long long int* assign_shared_mem(int);
-void detach_shm(unsigned long long int*);
-void release_all_shm(unsigned long long int*);
+#include <math.h>
+#define ULL unsigned long long int
+ULL one_process(ULL*,ULL*,int);
+ULL four_process(ULL*,ULL*,ULL*,int);
+ULL* assign_shared_mem(int);
+void detach_shm(ULL*);
+void release_all_shm(ULL*);
 int main()
 {
     unsigned int dim,tmp;
-    unsigned long long int sum=0;
-    printf("Please enter the dimension of 2 square matrices \n");
+    ULL sum=0;
+    printf("Please enter the dimension of 2 square matrices:  ");
     scanf("%d",&dim);
 
-    //printf("Enter matrix A: ");
-    //pointer to pointer allocation
-    unsigned int** A = (int **)malloc(dim * sizeof(unsigned int *)); //malloc row
-    for(int row=0;row<dim;row++) //malloc each row's col
-        A[row] = (int *)malloc(dim * sizeof(unsigned int *));
-
+    //shared memory allocation
+    ULL* shm_addr_a = assign_shared_mem(dim);
     for(int row=0;row<dim;row++)
-    {
         for(int col=0;col<dim;col++)
-        {
-            /*printf("Enter element of r=%d,c=%d ",row,col);
-            scanf("%d",&tmp);*/
-            A[row][col]=row*dim+col;//tmp;
-        }
-    }
+            shm_addr_a[row*dim+col]=row*dim+col;
     /*----------------------------------------------------------------------------------*/
     //printf("Enter matrix B: ");
-    unsigned int** B = (int **)malloc(dim * sizeof(unsigned int *));//malloc row
-    for(int row=0;row<dim;row++) //malloc each row's col
-        B[row] = (int *)malloc(dim * sizeof(unsigned int *));
-
+    ULL* shm_addr_b = assign_shared_mem(dim);
     for(int row=0;row<dim;row++)
-    {
         for(int col=0;col<dim;col++)
-        {
-            /*printf("Enter element of r=%d,c=%d ",row,col);
-            scanf("%d",&tmp);*/
-            B[row][col]=row*dim+col;//tmp;
-        }
-    }
-    /*Time estimation*/
+            shm_addr_b[row*dim+col]=row*dim+col;
+
+    ULL* shm_addr_c = assign_shared_mem(dim);
+
     struct timeval start, end;
 
     gettimeofday(&start, 0);
-    sum=one_process(A,B,dim);
+    sum=one_process(shm_addr_a,shm_addr_b,dim);
     gettimeofday(&end, 0);
-    int sec = end.tv_sec - start.tv_sec;
-    int usec = end.tv_usec - start.tv_usec;
+    int sec =abs(end.tv_sec - start.tv_sec);
+    int usec = abs(end.tv_usec - start.tv_usec);
     printf("1-process, checksum = %llu \n",sum);
-    printf("elapsed %f ms \n",sec*1000+(usec/1000.0));
+    printf("elapsed %f ms\n", sec*1000+(usec/1000.0));
 
     gettimeofday(&start, 0);
-    sum=four_process(A,B,dim);
+    sum=four_process(shm_addr_a,shm_addr_b,shm_addr_c,dim);
     gettimeofday(&end, 0);
-    int sec2 = end.tv_sec - start.tv_sec;
-    int usec2 = end.tv_usec - start.tv_usec;
+    int sec2 = abs(end.tv_sec - start.tv_sec);
+    int usec2 = abs(end.tv_usec - start.tv_usec);
     printf("4-process, checksum = %llu \n",sum);
-    printf("elapsed %f ms \n",sec2*1000+(usec2/1000.0));
+    printf("elapsed %f ms\n", sec2*1000+(usec2/1000.0));
 
     printf("Acceleration rate = %f\n",(sec*1000+(usec/1000.0))/(sec2*1000+(usec2/1000.0)));
-    for (int i=0;i<dim;i++)
-    {
-        int* current_ptr_A=A[i];
-        free(current_ptr_A);
-        int* current_ptr_B=B[i];
-        free(current_ptr_B);
-    }
-
     return 0;
 }
-unsigned long long int one_process(int** A,int** B,int dim)
+ULL one_process(ULL* shm_addr_a,ULL* shm_addr_b,int dim)
 {
-    unsigned long long int sum = 0;
-    for(int row=0;row<dim;row++ )
+    ULL sum=0;
+    for(int row=0;row<dim*dim;row+=dim)
     {
-        for(int col=0;col<dim;col++ )
+        for(int col=0;col<dim;col++)
         {
-            unsigned long long  int tc = 0;
-            for(int k=0;k<dim;k++ )
+            ULL cell=0; //a cell
+            for(int k=0;k<dim;k++)
             {
-                tc += (A[row][k] * B[k][col]);
+                cell+=shm_addr_a[row+k]*shm_addr_b[k*dim+col];
             }
-            sum += tc;
+            //printf("Getvalue %llu \n",cell);
+            sum+=cell;
         }
     }
     return sum;
 }
-unsigned long long int four_process(int** A,int** B,int dim)
+/*
+process tree should be like
+
+            main
+            /     \
+fork1----> /      \  <---- fork2
+          /       \
+         child1   child3
+            |
+            | <---- fork2 from child1
+            |
+        child2 from child1
+*/
+
+ULL four_process(ULL* shm_addr_a,ULL* shm_addr_b,ULL* shm_addr_c,int dim)
 {
-    /*
-    process tree should be like
 
-                main
-                /     \
-    fork1----> /      \  <---- fork2
-              /       \
-             child1   child3
-                |
-                | <---- fork2 from child1
-                |
-            child2 from child1
-    */
+    ULL sum = 0;
 
-    unsigned long long int sum = 0;
-    unsigned long long int* shm_addr = assign_shared_mem(dim);
 
     //do fork
     pid_t pid;
@@ -139,40 +117,45 @@ unsigned long long int four_process(int** A,int** B,int dim)
         }
         else if(pid2==0) //child2 for first 1/4 row of matrix multiplication
         {
-            for(int row=0;row<dim/4;row++)
+            for(int row=0,cnt=0;row<(dim*dim)/4;row+=dim,cnt++)
             {
                 for(int col=0;col<dim;col++)
                 {
-                    shm_addr[row*dim+col]=0; //initailize cell as 0
+                    shm_addr_c[cnt*dim+col]=0; //initailize cell as 0
                     for(int k=0;k<dim;k++)
                     {
-                        shm_addr[row*dim+col]+=A[row][k]*B[k][col];
-
+                        shm_addr_c[cnt*dim+col]+=shm_addr_a[row+k]*shm_addr_b[k*dim+col];
                     }
-                    //printf("Get value %d\n",shm_addr[row*dim+col]);
+                    //printf("Get value %llu\n",shm_addr_c[cnt*dim+col]);
                 }
             }
             //printf("Matrix ok 4\n");
-            detach_shm(shm_addr);
+            //dont forget to detach shm otherwise SIGSEGV
+            detach_shm(shm_addr_a);
+            detach_shm(shm_addr_b);
+            detach_shm(shm_addr_c);
             exit(EXIT_SUCCESS);
         }
         else //child1 (now become parent) for second 1/4 row of matrix multiplication
         {
-            for(int row=dim/4;row<dim/2;row++)
+            for(int row=(dim*dim)/4,cnt=dim/4;row<(dim*dim)/2;row+=dim,cnt++)
             {
                 for(int col=0;col<dim;col++)
                 {
-                    shm_addr[row*dim+col]=0; //initailize cell as 0
+                    shm_addr_c[cnt*dim+col]=0; //initailize cell as 0
                     for(int k=0;k<dim;k++)
                     {
-                        shm_addr[row*dim+col]+=A[row][k]*B[k][col];
+                        shm_addr_c[cnt*dim+col]+=shm_addr_a[row+k]*shm_addr_b[k*dim+col];
                     }
-                    //printf("Get value %d\n",shm_addr[row*dim+col]);
+                    //printf("Get value %llu\n",shm_addr_c[cnt*dim+col]);
                 }
             }
             //printf("Matrix ok 3\n");
             wait(NULL);
-            detach_shm(shm_addr);
+            //dont forget to detach shm otherwise SIGSEGV
+            detach_shm(shm_addr_a);
+            detach_shm(shm_addr_b);
+            detach_shm(shm_addr_c);
             exit(EXIT_SUCCESS);
         }
 
@@ -189,34 +172,37 @@ unsigned long long int four_process(int** A,int** B,int dim)
         }
         else if(pid3==0) //child3 for third 1/4 row of matrix multiplication
         {
-            for(int row=dim/2;row<(dim*3)/4;row++)
+            for(int row=(dim*dim)/2,cnt=dim/2;row<(dim*dim)*3/4;row+=dim,cnt++)
             {
                 for(int col=0;col<dim;col++)
                 {
-                    shm_addr[row*dim+col]=0; //initailize cell as 0
+                    shm_addr_c[cnt*dim+col]=0; //initailize cell as 0
                     for(int k=0;k<dim;k++)
                     {
-                        shm_addr[row*dim+col]+=A[row][k]*B[k][col];
+                        shm_addr_c[cnt*dim+col]+=shm_addr_a[row+k]*shm_addr_b[k*dim+col];
                     }
-                    //printf("Get value %d\n",shm_addr[row*dim+col]);
+                    //printf("Get value %llu\n",shm_addr_c[cnt*dim+col]);
                 }
             }
             //printf("Matrix ok 2\n");
-            detach_shm(shm_addr);
+            //dont forget to detach shm otherwise SIGSEGV
+            detach_shm(shm_addr_a);
+            detach_shm(shm_addr_b);
+            detach_shm(shm_addr_c);
             exit(EXIT_SUCCESS);
         }
         else //main parent (now become parent of TWO CHILD / WAIT 2 TIMES!!) for last 1/4 row of matrix multiplication
         {
-            for(int row=(dim*3)/4;row<dim;row++)
+            for(int row=(dim*dim)*3/4,cnt=dim*3/4;row<(dim*dim);row+=dim,cnt++)
             {
                 for(int col=0;col<dim;col++)
                 {
-                    shm_addr[row*dim+col]=0;
+                    shm_addr_c[cnt*dim+col]=0; //initailize cell as 0
                     for(int k=0;k<dim;k++)
                     {
-                        shm_addr[row*dim+col]+=A[row][k]*B[k][col];
+                        shm_addr_c[cnt*dim+col]+=shm_addr_a[row+k]*shm_addr_b[k*dim+col];
                     }
-                    //printf("Get value %d\n",shm_addr[row*dim+col]);
+                    //printf("Get value %llu\n",shm_addr_c[cnt*dim+col]);
                 }
             }
             //printf("Matrix ok \n");
@@ -227,29 +213,29 @@ unsigned long long int four_process(int** A,int** B,int dim)
             */
             for(unsigned int i=0;i<dim*dim;i++) //only the main parent to do this, do not write before return sum, which will cause over calculation
             {
-                //printf("shm res %llu \n",shm_addr[i]);
-                sum+=shm_addr[i];
+                //printf("shm res %llu \n",shm_addr_c[i]);
+                sum+=shm_addr_c[i];
             }
 
-            //printf("sum end sum is %llu\n",sum);
-            //release_all_shm(shm_addr);
+            //
+            //release_all_shm(shm_addr_c);
         }
 
     }
 
     return sum;
 }
-unsigned long long int* assign_shared_mem(int dim) //return the address of the shared memory
+ULL* assign_shared_mem(int dim) //return the address of the shared memory
 {
     int shmflg = 0666|IPC_CREAT;// 110110110 permission rw-rw-rw in linux
     //owner rw  group  rw  other   rw
-    int shmid=shmget(IPC_PRIVATE,sizeof(unsigned long long int)*dim*dim,shmflg);
+    int shmid=shmget(IPC_PRIVATE,sizeof(ULL)*dim*dim,shmflg);
     if(shmid==-1)
     {
         fprintf(stderr, "Shared memory get error\n");
         exit(EXIT_FAILURE); //exit with error
     }
-    unsigned long long int* shm_addr = shmat(shmid,NULL,shmflg);
+    ULL* shm_addr = shmat(shmid,NULL,shmflg);
     if(shm_addr==-1)
     {
         fprintf(stderr, "Shared memory attach error\n");
@@ -257,7 +243,7 @@ unsigned long long int* assign_shared_mem(int dim) //return the address of the s
     }
     return shm_addr;
 }
-void detach_shm(unsigned long long int* shm_addr)
+void detach_shm(ULL* shm_addr)
 {
     int detach=shmdt(shm_addr);
     if(detach==-1)
@@ -266,7 +252,7 @@ void detach_shm(unsigned long long int* shm_addr)
         exit(EXIT_FAILURE);
     }
 }
-void release_all_shm(unsigned long long int* shm_addr)
+void release_all_shm(ULL* shm_addr)
 {
     //detach_shm(shm_addr);
     int release=shmctl(shm_addr,IPC_RMID /*DELETE SHARED MEMORY*/,0);

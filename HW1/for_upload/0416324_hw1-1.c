@@ -141,6 +141,8 @@ int main()
         //printf("Process %d wait for its child \n",getpid());
         wait(NULL);
         //printf("Process %d 's child terminated \n",getpid());
+        //printf("Check for zombie process \n");
+        //system("ps aux | grep 'Z'");
     }
 
     return 0;

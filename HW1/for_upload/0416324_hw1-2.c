@@ -82,7 +82,6 @@ UNT one_process(UNT* shm_addr_a,UNT* shm_addr_b,int dim)
             sum+=cell;
         }
     }
-
     return sum;
 }
 /*
@@ -106,7 +105,7 @@ UNT four_process(UNT* shm_addr_a,UNT* shm_addr_b,UNT* shm_addr_c,int dim)
     //do fork
     pid_t pid;
     pid=fork();
-    //printf("Fork 1 for child1\n");
+    ////printf("Fork 1 for child1\n");
     if(pid <0)
     {
         // if error, fork failed
@@ -117,7 +116,7 @@ UNT four_process(UNT* shm_addr_a,UNT* shm_addr_b,UNT* shm_addr_c,int dim)
     {
         pid_t pid2;
         pid2=fork();
-        //printf("Fork 2 for child2\n");
+        ////printf("Fork 2 for child2\n");
         if(pid2<0)
         {
             fprintf(stderr, "Fork Failed");
@@ -125,7 +124,7 @@ UNT four_process(UNT* shm_addr_a,UNT* shm_addr_b,UNT* shm_addr_c,int dim)
         }
         else if(pid2==0) //child2 for first 1/4 row of matrix multiplication
         {
-            //printf("pid: %d \n",getpid());
+            ////printf("pid: %d \n",getpid());
             for(int row=0,cnt=0;row<(dim*dim)&&cnt<dim;)
             {
 

@@ -15,6 +15,7 @@ fork2    /   \  fork 3 (in hw is fork2)
     child2  child3
 fork4 |        | fork5 (in hw is fork3)
     child4  child5
+    
 */
 
 int main()

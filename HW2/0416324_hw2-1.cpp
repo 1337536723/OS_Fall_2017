@@ -42,5 +42,6 @@ int main()
     }
     printf("Average waiting time: %lf\n",total_wt/(double)process.size());
     printf("Average turnaround time: %lf\n",total_tt/(double)process.size());
+    fptr.close();
     return 0;
 }

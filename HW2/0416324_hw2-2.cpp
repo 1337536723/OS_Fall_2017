@@ -4,13 +4,21 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <sstream>
 #define pb push_back
 #define MAX_N 1000000
 using namespace std;
 typedef vector<int> vi;
+template <typename T>
+string num_to_str(T num)
+{
+     ostringstream ss;
+     ss << num;
+     return ss.str();
+}
 string trick(int process_num)
 {
-    return "P["+to_string(process_num)+"]";
+    return "P["+num_to_str(process_num)+"]";
 }
 struct one_process
 {

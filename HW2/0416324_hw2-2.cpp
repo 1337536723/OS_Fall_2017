@@ -111,28 +111,28 @@ int main()
     process[0].job_done=1;
     process[0].waiting_time=0;
     process[0].ta_time=process[0].burst_time;
-
+    tcase--;
     /*for(int i=0;i<process.size();i++)
         cout<<"ar "<<process[i].arrival_time<<" bu "<<process[i].burst_time<<endl;*/
 
 	for(;;)
     {
-        int min_burst=process[0].burst_time;
+        int min_burst=999;
         for(int i=1;i<process.size();i++) //dynamically search the current min burst time pid (has to be executable)
         {
-            if(process[i].burst_time<min_burst&& !process[i].job_done&& process[i].arrival_time< time_el)
+            if(process[i].burst_time<min_burst&& !process[i].job_done&& process[i].arrival_time<= time_el)
             {
                 min_burst=process[i].burst_time;
                 min_pid=i;
             }
         }
-        //printf("Time el %d find job %d, with min burst %d \n",time_el,min_pid,min_burst);
+        //printf("Time el %d find job %d, with min burst %d \n",time_el,min_pid+1,min_burst);
         process[min_pid].waiting_time=time_el-process[min_pid].arrival_time;
         time_el+=process[min_pid].burst_time;
         process[min_pid].ta_time=time_el-process[min_pid].arrival_time;
         process[min_pid].job_done=1;
         tcase--;
-        if(tcase==1)
+        if(tcase==0)
             break;
     }
     cout<<"Process     Waiting Time     Turnaround Time"<<endl;

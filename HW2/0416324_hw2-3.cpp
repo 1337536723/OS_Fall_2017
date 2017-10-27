@@ -23,7 +23,7 @@ string trick(int process_num)
 }
 struct one_process
 {
-    int arrival_time, process_id, burst_time, waiting_time, ta_time;
+    int arrival_time, burst_time, waiting_time, ta_time;
 };
 int main()
 {
@@ -51,7 +51,6 @@ int main()
         if(i<=tcase)
         {
             process[cnt].arrival_time=data_in[i];
-            process[cnt].process_id=cnt+1;
             process[cnt].waiting_time=0;
             process[cnt].ta_time=0;
             cnt++;//count up for one data

@@ -53,7 +53,7 @@ int main()
         if(i<=tcase)
         {
             process[cnt].arrival_time=data_in[i];
-            process[cnt].process_id=cnt+1;
+            process[cnt].process_id=cnt; //no+1
             process[cnt].waiting_time=0;
             process[cnt].ta_time=0;
             cnt++;//count up for one data
@@ -84,9 +84,11 @@ int main()
     /*for(int i=0;i<process.size();i++)
         cout<<"ar "<<process[i].arrival_time<<" bu "<<process[i].burst_time<<endl;*/
     //start to do Round Robin
-    for(;;time_el++)
+    while(1)
     {
         //for the rest of the non-executing process, just imcrement their waiting time
+        time_el++;
+        process[cur_pid].burst_time--;
         printf("\nTime el %d find job %d, with burst %d \n",time_el,cur_pid+1,process[cur_pid].burst_time);
         for(int i=0;i<process.size();i++)//for the rest of the non-executing process, just imcrement their waiting time
         {
@@ -106,18 +108,20 @@ int main()
                 printf("  Push %d into the queue \n",i+1);
             }
         }
-        process[cur_pid].burst_time--;
+
         //current executing process, so burst time--
-        queue<one_process> tmp(ready_queue);
-        printf("Ready Queue: ");
 
         cout<<endl;
         if(process[cur_pid].burst_time==0)//if certain job has been done, than context switiching to the job on top of queue
         {
             tcase--;
             int old=cur_pid;
-            cur_pid=ready_queue.front().process_id;
-            ready_queue.pop();
+            process[cur_pid].ta_time=time_el-process[cur_pid].arrival_time;
+            if(ready_queue.size())//in case of further access cause std::bad_alloc
+            {
+                cur_pid=ready_queue.front().process_id;
+                ready_queue.pop();
+            }
             printf("Pid %d has done, switch to %d\n",old+1,cur_pid+1);
         }
         else if(time_el&&((time_el)%time_quantum==0)) //context switching
@@ -127,19 +131,25 @@ int main()
                 ready_queue.push(process[cur_pid]);
             }
             printf("  Push %d into the queue ver2\n",cur_pid+1);
-            cur_pid=ready_queue.front().process_id;
-            ready_queue.pop();
+            if(ready_queue.size())//in case of further access cause std::bad_alloc
+            {
+                cur_pid=ready_queue.front().process_id;
+                ready_queue.pop();
+            }
             printf("Time qty is up, switch to process: %d \n",cur_pid+1);
         }
+        queue<one_process> tmp(ready_queue);
+        //printf("Ready Queue: ");
         while(tmp.size())
         {
             int jjjj=tmp.front().process_id;
-            cout<<jjjj<<" ";
+            cout<<jjjj+1<<" ";
             tmp.pop();
         }
-        PAUSE;
-        if(tcase==0)
+        if(tcase==0) //in case of further access cause std::bad_alloc
             break;
+        //PAUSE;
+
     }
     cout<<"Process     Waiting Time     Turnaround Time"<<endl;
     for(int i=0;i<process.size();i++)

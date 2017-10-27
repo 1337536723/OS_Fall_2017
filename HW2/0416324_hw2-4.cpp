@@ -49,6 +49,7 @@ void round_robin(int time_quantum,int cur_layer)
                 cout<<"pid "<<i+1<<" timeup by 1";
             }
         }
+        cout<<endl;
         //if a new job(waiting time is zero) comes during the execution in layer 1, switch to layer 0, than execute that job in layer 0
         if(cur_layer==1)
         {
@@ -72,18 +73,24 @@ void round_robin(int time_quantum,int cur_layer)
                 }
             }
         }
-        cout<<endl;
         if(process[cur_pid].burst_time==0)//if certain job has been done, then context switiching to the job on top of queue
         {
             tcase--;
             int old=cur_pid;
             process[cur_pid].ta_time=time_el-process[cur_pid].arrival_time;
-            if(ready_queue[cur_layer].size())//in case of further access cause std::bad_alloc
+            if(ready_queue[cur_layer].size())//in case of further access cause std::bad_alloc, there are still job can be popped to do
             {
                 cur_pid=ready_queue[cur_layer].front().process_id;
                 ready_queue[cur_layer].pop();
+                printf("Pid %d has done, switch to %d\n",old+1,cur_pid+1);
             }
-            printf("Pid %d has done, switch to %d\n",old+1,cur_pid+1);
+            else //or the current ready queue has been done
+            {
+                cur_pid=ready_queue[cur_layer+1].front().process_id;//switch to the next_layer's first pid;
+                printf("Layer %d is done\n",cur_layer);
+                printf("Pid %d has done, switch to %d due to switching layer\n",old+1,cur_pid+1);
+                return ;
+            }
         }
         else if(time_el&&((time_el)%time_quantum==0))
         {
@@ -92,7 +99,7 @@ void round_robin(int time_quantum,int cur_layer)
                 process[cur_pid].layer++;
                 ready_queue[cur_layer+1].push(process[cur_pid]);
             }
-            printf("Put %d into the layer \n",process[cur_pid].layer+1);
+            printf("Put %d into the layer %d due to not finished \n",process[cur_pid].process_id+1,cur_layer+1);
             if(ready_queue[cur_layer].size())//in case of further access cause std::bad_alloc
             {
                 cur_pid=ready_queue[cur_layer].front().process_id;
@@ -101,11 +108,7 @@ void round_robin(int time_quantum,int cur_layer)
             printf("Time qty is up, switch to process: %d \n",cur_pid+1);
         }
         printf("XXXXXXXX \n");
-        if(ready_queue[cur_layer].size()==0) //if current layer is done, do the next layer
-        {
-            printf("Layer %d is done\n",cur_layer);
-            return ;
-        }
+
         printf("Layer %d ready queue: ",cur_layer);
         queue<one_process> tmp(ready_queue[cur_layer]);
         while(tmp.size())
@@ -212,7 +215,7 @@ int main()
         }
     }
     //initilaize the ready_queue in layer 0 and layer 1
-    ready_queue.resize(2);
+    ready_queue.resize(3);
     //start to do MLFQ
     while(tcase)
     {

@@ -34,6 +34,7 @@ void round_robin(int time_quantum,int cur_layer)
 {
     while(1)
     {
+        PAUSE;
         time_el++;//increment the total elapsed time
         if(process[cur_pid].layer==cur_layer)//only execute the jobs in current layer
             process[cur_pid].burst_time--; //current executing process, so burst time--
@@ -56,6 +57,18 @@ void round_robin(int time_quantum,int cur_layer)
                 if(time_el>process[i].arrival_time&&process[i].waiting_time==0)
                 {
                     cur_layer=0;
+                }
+            }
+        }
+        else //Searcing for new process which has just arrived in the ready queue if cur_layer is 0
+        {
+            for(int i=0;i<process.size();i++)
+            {
+                //push the arrived process first, if happens concurrently
+                if(time_el==process[i].arrival_time&&time_el)
+                {
+                    ready_queue[cur_layer].push(process[i]);
+                    printf("Push %d into layer 0 \n",i+1);
                 }
             }
         }
@@ -87,7 +100,8 @@ void round_robin(int time_quantum,int cur_layer)
             }
             printf("Time qty is up, switch to process: %d \n",cur_pid+1);
         }
-        if(!ready_queue[cur_layer].size()) //if current layer is done, do the next layer
+        printf("XXXXXXXX \n");
+        if(ready_queue[cur_layer].size()==0) //if current layer is done, do the next layer
         {
             printf("Layer %d is done\n",cur_layer);
             return ;
@@ -101,7 +115,7 @@ void round_robin(int time_quantum,int cur_layer)
             tmp.pop();
         }
         cout<<endl;
-        PAUSE;
+
     }
 }
 void sjf(int cur_layer)
@@ -109,6 +123,7 @@ void sjf(int cur_layer)
     int min_pid=0;
     while(tcase)
     {
+        PAUSE;
         int min_burst=999;
         bool job_interrupt=0;
         for(int i=1;i<process.size();i++) //dynamically search the current min burst time pid (has to be executable)
@@ -135,7 +150,6 @@ void sjf(int cur_layer)
                 job_interrupt=1;
             }
         }
-        PAUSE;
         if(job_interrupt)//switch to layer 0
         {
             round_robin(time_quantum_1,cur_layer);
@@ -161,6 +175,7 @@ int main()
     tcase=data_in[0];
     time_quantum_1=data_in[tcase*2+1];
     time_quantum_2=data_in[tcase*2+2];
+    printf("Time qty 1 %d qty2 %d \n",time_quantum_1,time_quantum_2);
     cnt=0;
     //fetching data
     for(int i=1;i<=tcase*2;i++)
@@ -186,7 +201,7 @@ int main()
             cnt++;
         }
     }
-    bool all_job_finish=0;
+    //find the first process to execute
     for(int i=0;i<process.size();i++)
     {
         if(process[i].arrival_time==0)
@@ -196,6 +211,9 @@ int main()
             break;
         }
     }
+    //initilaize the ready_queue in layer 0 and layer 1
+    ready_queue.resize(2);
+    //start to do MLFQ
     while(tcase)
     {
         round_robin(time_quantum_1,0);

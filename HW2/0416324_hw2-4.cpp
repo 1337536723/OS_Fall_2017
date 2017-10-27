@@ -34,22 +34,22 @@ void round_robin(int time_quantum,int cur_layer)
 {
     while(1)
     {
-        PAUSE;
+        //PAUSE;
         time_el++;//increment the total elapsed time
         if(process[cur_pid].layer==cur_layer)//only execute the jobs in current layer
             process[cur_pid].burst_time--; //current executing process, so burst time--
         //for the rest of the non-executing process, just increment their waiting time
-        printf("-----------------------------------------------------\n");
-        printf("\nTime el %d find job %d, with burst %d cur_layer %d tcase %d\n",time_el,cur_pid+1,process[cur_pid].burst_time,cur_layer,tcase);
+        //printf("-----------------------------------------------------\n");
+        //printf("\nTime el %d find job %d, with burst %d cur_layer %d tcase %d\n",time_el,cur_pid+1,process[cur_pid].burst_time,cur_layer,tcase);
         for(int i=0;i<process.size();i++)//for the rest of the non-executing process, just imcrement their waiting time
         {
             if(time_el>process[i].arrival_time&&process[i].burst_time>0&&i!=cur_pid)
             {
                 process[i].waiting_time++;
-                cout<<"pid "<<i+1<<" timeup by 1";
+                //cout<<"pid "<<i+1<<" timeup by 1";
             }
         }
-        cout<<endl;
+        //cout<<endl;
         //if a new job(waiting time is zero) comes during the execution in layer 1, switch to layer 0, than execute that job in layer 0
         if(cur_layer==1)
         {
@@ -69,7 +69,7 @@ void round_robin(int time_quantum,int cur_layer)
                 if(time_el==process[i].arrival_time&&time_el)
                 {
                     ready_queue[cur_layer].push(process[i]);
-                    printf("Push %d into layer 0 \n",i+1);
+                    //printf("Push %d into layer 0 \n",i+1);
                 }
             }
         }
@@ -82,14 +82,14 @@ void round_robin(int time_quantum,int cur_layer)
             {
                 cur_pid=ready_queue[cur_layer].front().process_id;
                 ready_queue[cur_layer].pop();
-                printf("Pid %d has done, switch to %d\n",old+1,cur_pid+1);
+                //printf("Pid %d has done, switch to %d\n",old+1,cur_pid+1);
             }
             else //or the current ready queue has been done
             {
                 cur_pid=ready_queue[cur_layer+1].front().process_id;//switch to the next_layer's first pid;
                 ready_queue[cur_layer+1].pop(); //and pop that job to begin next layer
-                printf("Layer %d is done\n",cur_layer);
-                printf("Pid %d has done, switch to %d due to switching layer\n",old+1,cur_pid+1);
+                //printf("Layer %d is done\n",cur_layer);
+                //printf("Pid %d has done, switch to %d due to switching layer\n",old+1,cur_pid+1);
                 return ;
             }
         }
@@ -101,7 +101,7 @@ void round_robin(int time_quantum,int cur_layer)
                 process[cur_pid].layer++;
                 ready_queue[cur_layer+1].push(process[cur_pid]);
             }
-            printf("Put %d into the layer %d due to not finished \n",process[cur_pid].process_id+1,cur_layer+1);
+            //printf("Put %d into the layer %d due to not finished \n",process[cur_pid].process_id+1,cur_layer+1);
             if(ready_queue[cur_layer].size())//in case of further access cause std::bad_alloc, there are still job can be popped to do
             {
                 cur_pid=ready_queue[cur_layer].front().process_id;
@@ -111,23 +111,23 @@ void round_robin(int time_quantum,int cur_layer)
             {
                 cur_pid=ready_queue[cur_layer+1].front().process_id;//switch to the next_layer's first pid;
                 ready_queue[cur_layer+1].pop(); //and pop that job to begin next layer
-                printf("Layer %d is done\n",cur_layer);
-                printf("Pid %d has done, switch to %d due to switching layer\n",old+1,cur_pid+1);
+                //printf("Layer %d is done\n",cur_layer);
+                //printf("Pid %d has done, switch to %d due to switching layer\n",old+1,cur_pid+1);
                 return ;
             }
-            printf("Time qty is up, switch to process: %d \n",cur_pid+1);
+            //printf("Time qty is up, switch to process: %d \n",cur_pid+1);
         }
-        printf("XXXXXXXX \n");
+        //printf("XXXXXXXX \n");
 
-        printf("Layer %d ready queue: ",cur_layer);
-        queue<one_process> tmp(ready_queue[cur_layer]);
+        //printf("Layer %d ready queue: ",cur_layer);
+        /*queue<one_process> tmp(ready_queue[cur_layer]);
         while(tmp.size())
         {
             int jjjj=tmp.front().process_id;
             cout<<jjjj+1<<" ";
             tmp.pop();
         }
-        cout<<endl;
+        cout<<endl*/;
 
     }
 }
@@ -136,7 +136,7 @@ void sjf(int cur_layer)
     int min_pid=0;
     while(tcase)
     {
-        PAUSE;
+        //PAUSE;
         int min_burst=999;
         bool job_interrupt=0;
         for(int i=0;i<process.size();i++) //dynamically search the current min burst time pid (has to be executable)
@@ -147,7 +147,7 @@ void sjf(int cur_layer)
                 min_pid=i;
             }
         }
-        printf("Time el %d find job %d, with min burst %d tcase %d\n",time_el,min_pid+1,min_burst,tcase);
+        //printf("Time el %d find job %d, with min burst %d tcase %d\n",time_el,min_pid+1,min_burst,tcase);
 
         time_el+=process[min_pid].burst_time;
         //process[min_pid].waiting_time=time_el-process[min_pid].arrival_time; CANT USE THIS ONE, SINCE IT WILL MODIFY THE AFOREMENTIONED PREEMPTED VALUE
@@ -157,7 +157,7 @@ void sjf(int cur_layer)
             if(time_el>process[i].arrival_time&&process[i].burst_time>0&&i!=min_pid)
             {
                 process[i].waiting_time+=process[min_pid].burst_time;
-                cout<<" pid "<<i+1<<" timeup by "<<process[min_pid].burst_time;
+                //cout<<" pid "<<i+1<<" timeup by "<<process[min_pid].burst_time;
             }
         }
         process[min_pid].ta_time=time_el-process[min_pid].arrival_time;
@@ -198,7 +198,7 @@ int main()
     tcase=data_in[0];
     time_quantum_1=data_in[tcase*2+1];
     time_quantum_2=data_in[tcase*2+2];
-    printf("Time qty 1 %d qty2 %d INITIL T CASE IS %d\n",time_quantum_1,time_quantum_2,tcase);
+    //printf("Time qty 1 %d qty2 %d INITIL T CASE IS %d\n",time_quantum_1,time_quantum_2,tcase);
     cnt=0;
     //fetching data
     for(int i=1;i<=tcase*2;i++)

@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #define pb push_back
-#define MAX_N 1000000
+#define MAX_N 100
 using namespace std;
 typedef vector<int> vi;
 template <typename T>

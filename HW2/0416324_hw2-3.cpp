@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #define pb push_back
-#define MAX_N 1000000
+#define MAX_N 100
 #define PAUSE {fgetc(stdin);}
 using namespace std;
 typedef vector<int> vi;
@@ -74,10 +74,11 @@ int main()
     /*for(int i=0;i<process.size();i++)
         cout<<"ar "<<process[i].arrival_time<<" bu "<<process[i].burst_time<<endl;*/
     int min_burst=9999,min_pid=0;
+    //srart to do SRJF
 	for(;;time_el++)
     {
         //printf("\nTime el %d find job %d, with min burst %d \n",time_el,min_pid+1,min_burst);
-        for(int i=0;i<process.size();i++) //accumulate the waiting_time of the job which is not runing currently
+        for(int i=0;i<process.size();i++)//for the rest of the non-executing process, just imcrement their waiting time
         //this should be done before job switching, or at the time such as t=4 to 5 , p2 accumulation will be cut off
         {
             if(time_el>process[i].arrival_time&&process[i].burst_time>0&&i!=min_pid)
@@ -87,7 +88,6 @@ int main()
             }
         }
         min_burst=9999,min_pid=0;
-        //printf("Remaining burst time :");
         for(int i=process.size()-1;i>=0;i--) //dynamically search the current min burst time pid (has to be executable) DESCENDING FOR SMALLER PID TO GO FIRST
         {
             if(process[i].burst_time<min_burst&& process[i].burst_time>0 && process[i].arrival_time<= time_el)

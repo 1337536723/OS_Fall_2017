@@ -24,7 +24,7 @@ string trick(int process_num)
 }
 struct one_process
 {
-    int arrival_time, process_id, burst_time, waiting_time, ta_time;
+    int process_id,arrival_time, burst_time, waiting_time, ta_time;
 };
 int main()
 {
@@ -81,8 +81,6 @@ int main()
             break;
         }
     }
-    /*for(int i=0;i<process.size();i++)
-        cout<<"ar "<<process[i].arrival_time<<" bu "<<process[i].burst_time<<endl;*/
     //start to do Round Robin
     while(1)
     {

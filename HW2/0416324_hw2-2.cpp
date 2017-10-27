@@ -68,53 +68,13 @@ int main()
             cnt++;
         }
     }
-    //The following code will cause the following error p2: malloc.c:2394: sysmalloc: Assertion `(old_top == initial_top (av) && old_size == 0) || ((unsigned long) (old_size) >= MINSIZE && prev_inuse (old_top) && ((unsigned long) old_end & (pagesize - 1)) == 0)' failed.
-    //Aborted (core dumped), quite strange
 
-    /*while(fptr)
-    {
-        fptr>>some;
-
-		cout<<"";
-        if(!get_tcase)
-        {
-            tcase=some;
-            process.resize(tcase);
-            get_tcase=1;
-        }
-        else
-        {
-            if(!get_burst)
-			{
-                process[cnt].arrival_time=some;
-                process[cnt].process_id=cnt+1;
-                process[cnt].waiting_time=0;
-                process[cnt].ta_time=0;
-                process[cnt].job_done=0;
-                cnt++;//count up for one data
-                if(cnt==tcase)
-                {
-                    get_burst=1;
-                    cnt=0;
-                }
-            }
-            else
-            {
-                process[cnt].burst_time=some;
-                cnt++;
-            }
-        }
-    }*/
-    //process.pop_back();
-    //initilaize calculation
     int time_el=process[0].burst_time,min_pid=0;
     process[0].job_done=1;
     process[0].waiting_time=0;
     process[0].ta_time=process[0].burst_time;
     tcase--;
-    /*for(int i=0;i<process.size();i++)
-        cout<<"ar "<<process[i].arrival_time<<" bu "<<process[i].burst_time<<endl;*/
-
+    
 	for(;;)
     {
         int min_burst=999;
@@ -151,3 +111,41 @@ int main()
     fptr.close();
 	return 0;
 }
+//The following code will cause the following error p2: malloc.c:2394: sysmalloc: Assertion `(old_top == initial_top (av) && old_size == 0) || ((unsigned long) (old_size) >= MINSIZE && prev_inuse (old_top) && ((unsigned long) old_end & (pagesize - 1)) == 0)' failed.
+//Aborted (core dumped), quite strange
+/*while(fptr)
+{
+    fptr>>some;
+
+    cout<<"";
+    if(!get_tcase)
+    {
+        tcase=some;
+        process.resize(tcase);
+        get_tcase=1;
+    }
+    else
+    {
+        if(!get_burst)
+        {
+            process[cnt].arrival_time=some;
+            process[cnt].process_id=cnt+1;
+            process[cnt].waiting_time=0;
+            process[cnt].ta_time=0;
+            process[cnt].job_done=0;
+            cnt++;//count up for one data
+            if(cnt==tcase)
+            {
+                get_burst=1;
+                cnt=0;
+            }
+        }
+        else
+        {
+            process[cnt].burst_time=some;
+            cnt++;
+        }
+    }
+}*/
+//process.pop_back();
+//initilaize calculation

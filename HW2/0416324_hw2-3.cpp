@@ -66,12 +66,18 @@ int main()
             cnt++;
         }
     }
-    //process.pop_back();
     //initilaize calculation
     int time_el=0,task_el=0,cur_pid=0; //time elapsed, time elapsed for a certain task
-    process[0].waiting_time=0;
-    /*for(int i=0;i<process.size();i++)
-        cout<<"ar "<<process[i].arrival_time<<" bu "<<process[i].burst_time<<endl;*/
+    //find the first process to execute
+    for(int i=0;i<process.size();i++)
+    {
+        if(process[i].arrival_time==0)
+        {
+            process[i].waiting_time=0;
+            cur_pid=i;
+            break;
+        }
+    }
     int min_burst=9999,min_pid=0;
     //srart to do SRJF
 	for(;;time_el++)

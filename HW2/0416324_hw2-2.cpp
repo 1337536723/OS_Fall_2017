@@ -70,11 +70,21 @@ int main()
     }
 
     int time_el=process[0].burst_time,min_pid=0;
-    process[0].job_done=1;
-    process[0].waiting_time=0;
-    process[0].ta_time=process[0].burst_time;
+    //find the first process to execute
+    for(int i=0;i<process.size();i++)
+    {
+        if(process[i].arrival_time==0)
+        {
+            process[i].waiting_time=0;
+            min_pid=i;
+            break;
+        }
+    }
+    process[min_pid].job_done=1;
+    process[min_pid].waiting_time=0;
+    process[min_pid].ta_time=process[min_pid].burst_time;
     tcase--;
-    
+
 	for(;;)
     {
         int min_burst=999;

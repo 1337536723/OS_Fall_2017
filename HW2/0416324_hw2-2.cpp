@@ -69,7 +69,7 @@ int main()
         }
     }
 
-    int time_el=process[0].burst_time,min_pid=0;
+    int time_el=0,min_pid=0;
     //find the first process to execute
     for(int i=0;i<process.size();i++)
     {
@@ -83,20 +83,22 @@ int main()
     process[min_pid].job_done=1;
     process[min_pid].waiting_time=0;
     process[min_pid].ta_time=process[min_pid].burst_time;
+    time_el+=process[min_pid].burst_time;
     tcase--;
+    printf("Min pid is %d and time el %d\n",min_pid+1,time_el);
 
 	for(;;)
     {
         int min_burst=999;
-        for(int i=1;i<process.size();i++) //dynamically search the current min burst time pid (has to be executable)
+        for(int i=process.size()-1;i>=0;i--) //dynamically search the current min burst time pid (has to be executable)
         {
-            if(process[i].burst_time<min_burst&& !process[i].job_done&& process[i].arrival_time<= time_el)
+            if(process[i].burst_time<=min_burst&& !process[i].job_done&& process[i].arrival_time<= time_el)
             {
                 min_burst=process[i].burst_time;
                 min_pid=i;
             }
         }
-        //printf("Time el %d find job %d, with min burst %d \n",time_el,min_pid+1,min_burst);
+        printf("Time el %d find job %d, with min burst %d \n",time_el,min_pid+1,min_burst);
         process[min_pid].waiting_time=time_el-process[min_pid].arrival_time;
         time_el+=process[min_pid].burst_time;
         process[min_pid].ta_time=time_el-process[min_pid].arrival_time;

@@ -95,7 +95,7 @@ int main()
         min_burst=9999,min_pid=0;
         for(int i=process.size()-1;i>=0;i--) //dynamically search the current min burst time pid (has to be executable) DESCENDING FOR SMALLER PID TO GO FIRST
         {
-            if(process[i].burst_time<min_burst&& process[i].burst_time>0 && process[i].arrival_time<= time_el)
+            if(process[i].burst_time<=min_burst&& process[i].burst_time>0 && process[i].arrival_time<= time_el)
             {
                 min_burst=process[i].burst_time;
                 min_pid=i;

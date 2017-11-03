@@ -40,7 +40,7 @@ void round_robin(int time_quantum,int cur_layer)
             process[cur_pid].burst_time--; //current executing process, so burst time--
         //for the rest of the non-executing process, just increment their waiting time
         //printf("-----------------------------------------------------\n");
-        //printf("\nTime el %d find job %d, with burst %d cur_layer %d tcase %d\n",time_el,cur_pid+1,process[cur_pid].burst_time,cur_layer,tcase);
+        printf("\nTime el %d find job %d, with burst %d cur_layer %d tcase %d\n",time_el,cur_pid+1,process[cur_pid].burst_time,cur_layer,tcase);
         for(int i=0;i<process.size();i++)//for the rest of the non-executing process, just imcrement their waiting time
         {
             if(time_el>process[i].arrival_time&&process[i].burst_time>0&&i!=cur_pid)
@@ -55,7 +55,7 @@ void round_robin(int time_quantum,int cur_layer)
         {
             for(int i=0;i<process.size();i++)
             {
-                if(time_el>process[i].arrival_time&&process[i].waiting_time==0)
+                if(time_el>=process[i].arrival_time&&process[i].waiting_time==0)
                 {
                     cur_layer=0;
                 }
@@ -86,6 +86,7 @@ void round_robin(int time_quantum,int cur_layer)
             }
             else //or the current ready queue has been done
             {
+                //time_el=time_el+(time_quantum-process[cur_pid].burst_time);
                 cur_pid=ready_queue[cur_layer+1].front().process_id;//switch to the next_layer's first pid;
                 ready_queue[cur_layer+1].pop(); //and pop that job to begin next layer
                 //printf("Layer %d is done\n",cur_layer);
@@ -139,15 +140,15 @@ void sjf(int cur_layer)
         //PAUSE;
         int min_burst=999;
         bool job_interrupt=0;
-        for(int i=0;i<process.size();i++) //dynamically search the current min burst time pid (has to be executable)
+        for(int i=process.size()-1;i>=0;i--) //dynamically search the current min burst time pid (has to be executable)
         {
-            if(process[i].burst_time<min_burst&&process[i].burst_time&& process[i].arrival_time<= time_el)
+            if(process[i].burst_time<=min_burst&&process[i].burst_time&& process[i].arrival_time<= time_el)
             {
                 min_burst=process[i].burst_time;
                 min_pid=i;
             }
         }
-        //printf("Time el %d find job %d, with min burst %d tcase %d\n",time_el,min_pid+1,min_burst,tcase);
+        printf("Time el %d find job %d, with min burst %d tcase %d\n",time_el,min_pid+1,min_burst,tcase);
 
         time_el+=process[min_pid].burst_time;
         //process[min_pid].waiting_time=time_el-process[min_pid].arrival_time; CANT USE THIS ONE, SINCE IT WILL MODIFY THE AFOREMENTIONED PREEMPTED VALUE
@@ -166,7 +167,7 @@ void sjf(int cur_layer)
         //if a new job(waiting time is zero) comes during the execution in layer 1, switch to layer 0, than execute that job in layer 0
         for(int i=0;i<process.size();i++)
         {
-            if(time_el>process[i].arrival_time&&process[i].waiting_time==0)
+            if(time_el>=process[i].arrival_time&&process[i].waiting_time==0)
             {
                 cur_layer=0;
                 ready_queue[0].push(process[i]);
@@ -183,7 +184,7 @@ void sjf(int cur_layer)
 int main()
 {
     fstream fptr;
-    fptr.open("Q4.txt");
+    fptr.open("Q5.txt");
     int some,wt=0,tt=0,cnt=0;//,total_tt=0,cnt=0;
     int data_in [MAX_N] ;
     bool get_tcase=0,get_burst=0;

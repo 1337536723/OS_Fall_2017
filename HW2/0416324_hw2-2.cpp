@@ -25,6 +25,10 @@ struct one_process
     int arrival_time, process_id, burst_time, waiting_time, ta_time;
     bool job_done;
 };
+bool mycompare(one_process op1,one_process op2)
+{
+    return op1.burst_time<op2.burst_time;
+}
 int main()
 {
     fstream fptr;
@@ -84,12 +88,19 @@ int main()
     process[min_pid].waiting_time=0;
     process[min_pid].ta_time=process[min_pid].burst_time;
     time_el+=process[min_pid].burst_time;
-    tcase--;
-    printf("Min pid is %d and time el %d\n",min_pid+1,time_el);
-
-	for(;;)
+    //tcase--;
+    for(;;)
     {
         int min_burst=999;
+        bool all_end=1;
+        for(int i=0;i<process.size();i++)
+        {
+            if(!process[i].job_done)
+                all_end=0;
+        }
+        if(all_end)
+            break;
+
         for(int i=process.size()-1;i>=0;i--) //dynamically search the current min burst time pid (has to be executable)
         {
             if(process[i].burst_time<=min_burst&& !process[i].job_done&& process[i].arrival_time<= time_el)
@@ -98,14 +109,19 @@ int main()
                 min_pid=i;
             }
         }
-        printf("Time el %d find job %d, with min burst %d \n",time_el,min_pid+1,min_burst);
-        process[min_pid].waiting_time=time_el-process[min_pid].arrival_time;
-        time_el+=process[min_pid].burst_time;
-        process[min_pid].ta_time=time_el-process[min_pid].arrival_time;
-        process[min_pid].job_done=1;
-        tcase--;
-        if(tcase==0)
-            break;
+        //printf("minpid now %d\n",min_pid+1);
+        if(!process[min_pid].job_done)
+        {
+            //printf("Time el %d find job %d, with min burst %d \n",time_el,min_pid+1,min_burst);
+            process[min_pid].waiting_time=time_el-process[min_pid].arrival_time;
+            time_el+=process[min_pid].burst_time;
+            process[min_pid].ta_time=time_el-process[min_pid].arrival_time;
+            process[min_pid].job_done=1;
+        }
+        else
+        {
+            time_el++;
+        }
     }
     cout<<"Process     Waiting Time     Turnaround Time"<<endl;
     for(int i=0;i<process.size();i++)

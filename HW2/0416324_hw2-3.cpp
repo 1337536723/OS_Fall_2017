@@ -67,18 +67,18 @@ int main()
         }
     }
     //initilaize calculation
-    int time_el=0,task_el=0,cur_pid=0; //time elapsed, time elapsed for a certain task
+    int time_el=0,task_el=0,min_pid=0,min_burst; //time elapsed, time elapsed for a certain task
     //find the first process to execute
     for(int i=0;i<process.size();i++)
     {
         if(process[i].arrival_time==0)
         {
             process[i].waiting_time=0;
-            cur_pid=i;
+            min_burst=process[min_pid].burst_time;
+            min_pid=i;
             break;
         }
     }
-    int min_burst=9999,min_pid=0;
     //srart to do SRJF
 	for(;;time_el++)
     {
@@ -92,7 +92,9 @@ int main()
                 //cout<<"pid "<<i+1<<" timeup by 1";
             }
         }
-        min_burst=9999,min_pid=0;
+        //min_burst=process[min_pid].burst_time;
+        min_burst=9999;
+        min_pid=0;
         for(int i=process.size()-1;i>=0;i--) //dynamically search the current min burst time pid (has to be executable) DESCENDING FOR SMALLER PID TO GO FIRST
         {
             if(process[i].burst_time<=min_burst&& process[i].burst_time>0 && process[i].arrival_time<= time_el)
@@ -108,6 +110,7 @@ int main()
         process[min_pid].burst_time--;
         if(process[min_pid].burst_time==0) //certain job has been done
         {
+            //printf("At time %d  %d is finished \n",time_el,min_pid+1);
             tcase--;
             process[min_pid].ta_time=time_el-process[min_pid].arrival_time+1; //dont forget to +1 since time_el++ is at the loopend (total time elapsed)
         }

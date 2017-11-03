@@ -6,13 +6,12 @@
 #include <algorithm>
 #include <sstream>
 #include <queue>
+#define INT_MAX 0x7FFFFFFF
 #define pb push_back
 #define MAX_N 100
 #define PAUSE {fgetc(stdin);}
 using namespace std;
 int time_el,time_quantum_1,time_quantum_2,tcase,cur_pid;
-
-typedef vector<int> vi;
 template <typename T>
 string num_to_str(T num)
 {
@@ -26,161 +25,212 @@ string trick(int process_num)
 }
 struct one_process
 {
-    int process_id,arrival_time, burst_time, waiting_time, ta_time, layer;
+    int process_id, arrival_time, burst_time, burst_time_run, waiting_time, ta_time, final_time;
+    bool in_ready;
 };
-vector<one_process>process;
-vector<queue<one_process> >ready_queue;
-void round_robin(int time_quantum,int cur_layer)
+bool mycompare(one_process p1,one_process p2)
 {
-    while(1)
-    {
-        //PAUSE;
-        time_el++;//increment the total elapsed time
-        if(process[cur_pid].layer==cur_layer)//only execute the jobs in current layer
-            process[cur_pid].burst_time--; //current executing process, so burst time--
-        //for the rest of the non-executing process, just increment their waiting time
-        //printf("-----------------------------------------------------\n");
-        printf("\nTime el %d find job %d, with burst %d cur_layer %d tcase %d\n",time_el,cur_pid+1,process[cur_pid].burst_time,cur_layer,tcase);
-        for(int i=0;i<process.size();i++)//for the rest of the non-executing process, just imcrement their waiting time
-        {
-            if(time_el>process[i].arrival_time&&process[i].burst_time>0&&i!=cur_pid)
-            {
-                process[i].waiting_time++;
-                //cout<<"pid "<<i+1<<" timeup by 1";
-            }
-        }
-        //cout<<endl;
-        //if a new job(waiting time is zero) comes during the execution in layer 1, switch to layer 0, than execute that job in layer 0
-        if(cur_layer==1)
-        {
-            for(int i=0;i<process.size();i++)
-            {
-                if(time_el>=process[i].arrival_time&&process[i].waiting_time==0)
-                {
-                    cur_layer=0;
-                }
-            }
-        }
-        else //Searcing for new process which has just arrived in the ready queue if cur_layer is 0
-        {
-            for(int i=0;i<process.size();i++)
-            {
-                //push the arrived process first, if happens concurrently
-                if(time_el==process[i].arrival_time&&time_el)
-                {
-                    ready_queue[cur_layer].push(process[i]);
-                    //printf("Push %d into layer 0 \n",i+1);
-                }
-            }
-        }
-        if(process[cur_pid].burst_time==0)//if certain job has been done, then context switiching to the job on top of queue
-        {
-            tcase--;
-            int old=cur_pid;
-            process[cur_pid].ta_time=time_el-process[cur_pid].arrival_time;
-            if(ready_queue[cur_layer].size())//in case of further access cause std::bad_alloc, there are still job can be popped to do
-            {
-                cur_pid=ready_queue[cur_layer].front().process_id;
-                ready_queue[cur_layer].pop();
-                //printf("Pid %d has done, switch to %d\n",old+1,cur_pid+1);
-            }
-            else //or the current ready queue has been done
-            {
-                //time_el=time_el+(time_quantum-process[cur_pid].burst_time);
-                cur_pid=ready_queue[cur_layer+1].front().process_id;//switch to the next_layer's first pid;
-                ready_queue[cur_layer+1].pop(); //and pop that job to begin next layer
-                //printf("Layer %d is done\n",cur_layer);
-                //printf("Pid %d has done, switch to %d due to switching layer\n",old+1,cur_pid+1);
-                return ;
-            }
-        }
-        else if(time_el&&((time_el)%time_quantum==0))
-        {
-            int old=cur_pid;
-            if(process[cur_pid].burst_time) //if a job has not finished in the given time_quantum, promote its priority, put it into next layer
-            {
-                process[cur_pid].layer++;
-                ready_queue[cur_layer+1].push(process[cur_pid]);
-            }
-            //printf("Put %d into the layer %d due to not finished \n",process[cur_pid].process_id+1,cur_layer+1);
-            if(ready_queue[cur_layer].size())//in case of further access cause std::bad_alloc, there are still job can be popped to do
-            {
-                cur_pid=ready_queue[cur_layer].front().process_id;
-                ready_queue[cur_layer].pop();
-            }
-            else//or due to all switicing to next layer, the current layer has been done
-            {
-                cur_pid=ready_queue[cur_layer+1].front().process_id;//switch to the next_layer's first pid;
-                ready_queue[cur_layer+1].pop(); //and pop that job to begin next layer
-                //printf("Layer %d is done\n",cur_layer);
-                //printf("Pid %d has done, switch to %d due to switching layer\n",old+1,cur_pid+1);
-                return ;
-            }
-            //printf("Time qty is up, switch to process: %d \n",cur_pid+1);
-        }
-        //printf("XXXXXXXX \n");
-
-        //printf("Layer %d ready queue: ",cur_layer);
-        /*queue<one_process> tmp(ready_queue[cur_layer]);
-        while(tmp.size())
-        {
-            int jjjj=tmp.front().process_id;
-            cout<<jjjj+1<<" ";
-            tmp.pop();
-        }
-        cout<<endl*/;
-
-    }
+    return p1.process_id<p2.process_id;
 }
-void sjf(int cur_layer)
+vector<one_process>process;
+vector<one_process> mul_level_queue()
 {
-    int min_pid=0;
+    int time_el=0,cur_layer=0,cur_time_quantum=0,min_pid=0;
+    bool switch_layer=0,switch_job=0; //need to swithc the layer
+    vector<queue<one_process>> ready_queue;
+    ready_queue.resize(3); //does not use 0 only 1 2 for 1 based calculation
+    vector<one_process> sjf_queue,result;
+    //result.resize(tcase);
     while(tcase)
     {
-        //PAUSE;
-        int min_burst=999;
-        bool job_interrupt=0;
-        for(int i=process.size()-1;i>=0;i--) //dynamically search the current min burst time pid (has to be executable)
-        {
-            if(process[i].burst_time<=min_burst&&process[i].burst_time&& process[i].arrival_time<= time_el)
-            {
-                min_burst=process[i].burst_time;
-                min_pid=i;
-            }
-        }
-        printf("Time el %d find job %d, with min burst %d tcase %d\n",time_el,min_pid+1,min_burst,tcase);
-
-        time_el+=process[min_pid].burst_time;
-        //process[min_pid].waiting_time=time_el-process[min_pid].arrival_time; CANT USE THIS ONE, SINCE IT WILL MODIFY THE AFOREMENTIONED PREEMPTED VALUE
-        //should use like in the  round_robin
-        for(int i=0;i<process.size();i++)//for the rest of the non-executing process, just imcrement their waiting time
-        {
-            if(time_el>process[i].arrival_time&&process[i].burst_time>0&&i!=min_pid)
-            {
-                process[i].waiting_time+=process[min_pid].burst_time;
-                //cout<<" pid "<<i+1<<" timeup by "<<process[min_pid].burst_time;
-            }
-        }
-        process[min_pid].ta_time=time_el-process[min_pid].arrival_time;
-        process[min_pid].burst_time=0;
-        tcase--;
-        //if a new job(waiting time is zero) comes during the execution in layer 1, switch to layer 0, than execute that job in layer 0
         for(int i=0;i<process.size();i++)
         {
-            if(time_el>=process[i].arrival_time&&process[i].waiting_time==0)
+            //cout<<"Process "<<i+1<<"  arrival time is "<<process[i].arrival_time<<endl;
+            if(process[i].arrival_time<=time_el && process[i].in_ready==0)
             {
-                cur_layer=0;
-                ready_queue[0].push(process[i]);
-                job_interrupt=1;
+                ready_queue[1].push(process[i]);
+                process[i].in_ready=1;
+                //printf("Time %d push job %d \n",time_el,i+1);
             }
         }
-        if(job_interrupt)//switch to layer 0
-        {
-            round_robin(time_quantum_1,cur_layer);
-        }
-    }
-}
 
+        if(cur_time_quantum) //a task is able to run in its time quantum
+        {
+            if(cur_time_quantum==1) //it will be drained out in this time
+                switch_job=1;
+
+            if(cur_layer==1)
+            {
+                cur_time_quantum--; //decrease the time quantum
+                ready_queue[cur_layer].front().burst_time_run--; //do such job, decrease the time
+                //printf("Current time %d job %d layer1\n",time_el,ready_queue[cur_layer].front().process_id+1);
+                if(ready_queue[cur_layer].front().burst_time_run==0) //if it is done
+                {
+                    cur_time_quantum=time_quantum_1; //restore
+                    switch_job=0; //does not need to switch job, since it is naturally terminated ,not preempted
+
+                    ready_queue[cur_layer].front().waiting_time=time_el-ready_queue[cur_layer].front().arrival_time-ready_queue[cur_layer].front().burst_time+1;
+                    ready_queue[cur_layer].front().ta_time=time_el-ready_queue[cur_layer].front().arrival_time+1;
+                    result.push_back(ready_queue[cur_layer].front());
+                    //printf("Job has done !Current time %d job %d layer1\n",time_el,ready_queue[cur_layer].front().process_id+1);
+                    ready_queue[cur_layer].pop();
+
+                    tcase--;
+                }
+            }
+            else if(cur_layer==2)
+            {
+                cur_time_quantum--; //decrease the time quantum
+                ready_queue[cur_layer].front().burst_time_run--; //do such job, decrease the time
+                //printf("Current time %d job %d layer2\n",time_el,ready_queue[cur_layer].front().process_id+1);
+                if(ready_queue[cur_layer].front().burst_time_run==0) //if it is done
+                {
+                    cur_time_quantum=time_quantum_2; //restore
+                    switch_job=0; //does not need to switch job, since it is naturally terminated ,not preempted
+
+                    ready_queue[cur_layer].front().waiting_time=time_el-ready_queue[cur_layer].front().arrival_time-ready_queue[cur_layer].front().burst_time+1;
+                    ready_queue[cur_layer].front().ta_time=time_el-ready_queue[cur_layer].front().arrival_time+1;
+                    result.push_back(ready_queue[cur_layer].front());
+                    //printf("Job has done !Current time %d job %d layer2\n",time_el,ready_queue[cur_layer].front().process_id+1);
+                    ready_queue[cur_layer].pop();
+
+                    tcase--;
+                }
+            }
+            else if(cur_layer==3)
+            {
+                cur_time_quantum--;
+                sjf_queue[min_pid].burst_time_run--;
+                switch_job=0; //not move job =0, make sure that switch_job is needless in layer 3
+                //printf("Current time %d job %d layer3 \n",time_el,sjf_queue[min_pid].process_id+1);
+                if(sjf_queue[min_pid].burst_time_run==0)
+                {
+                    sjf_queue[min_pid].waiting_time=time_el-sjf_queue[min_pid].arrival_time-sjf_queue[min_pid].burst_time+1;
+                    sjf_queue[min_pid].ta_time=time_el-sjf_queue[min_pid].arrival_time+1;
+
+                    result.push_back(sjf_queue[min_pid]);
+                    //printf("Job has done!Current time %d job %d layer3 \n",time_el,sjf_queue[min_pid].process_id+1);
+                    sjf_queue.erase(sjf_queue.begin()+min_pid);
+
+                    tcase--;
+                }
+            }
+
+        }
+        else // a task was swiped out due to reach its time_quantum
+        {
+            if(switch_job) //only layer1,2 can be able to use round robin
+            {
+                if(cur_layer==1) // swipe to layer 2 due to time out
+                {
+                    switch_job=0; //reset the swithc_job
+                    ready_queue[cur_layer+1].push(ready_queue[cur_layer].front());
+                    //printf("Current time %d job %d was swiped to layer2\n",time_el,ready_queue[cur_layer].front().process_id+1);
+                    ready_queue[cur_layer].pop();
+                }
+                else if(cur_layer==2) // swipe to layer 3 due to time out
+                {
+                    switch_job=0; //reset the switch job
+                    sjf_queue.push_back(ready_queue[cur_layer].front()); //swipe to layer 3. the last layer, due to time outr
+                    //printf("Current time %d job %d was swiped to layer3\n",time_el,ready_queue[cur_layer].front().process_id+1);
+                    ready_queue[cur_layer].pop();
+                }
+
+            }
+
+            //a job is interrupted due to something has to run in the top layer
+            if(ready_queue[1].size())
+            {
+                cur_time_quantum=time_quantum_1-1; //do it right now
+                cur_layer=1;
+                ready_queue[1].front().burst_time_run--;
+
+                if(ready_queue[1].front().burst_time_run==0) //the burst time has done
+                {
+                    cur_time_quantum=time_quantum_1; //regain
+                    ready_queue[1].front().waiting_time=time_el-ready_queue[1].front().arrival_time-ready_queue[1].front().burst_time+1;
+                    ready_queue[1].front().ta_time=time_el-ready_queue[1].front().arrival_time+1;
+                    result.push_back(ready_queue[1].front());
+
+                    ready_queue[1].pop();
+
+                    tcase--;
+                }
+            }
+            else
+            {
+                if(ready_queue[2].size()) //then check layer 2
+                {
+                    cur_time_quantum=time_quantum_2-1; //do it right now
+                    cur_layer=2;
+                    ready_queue[2].front().burst_time_run--;
+
+                    if(ready_queue[2].front().burst_time_run==0) //the burst time has done
+                    {
+                        cur_time_quantum=time_quantum_2; //regain
+                        ready_queue[2].front().waiting_time=time_el-ready_queue[2].front().arrival_time-ready_queue[2].front().burst_time+1;
+                        ready_queue[2].front().ta_time=time_el-ready_queue[2].front().arrival_time+1;
+                        result.push_back(ready_queue[2].front());
+
+                        ready_queue[2].pop();
+
+                        tcase--;
+                    }
+                }
+                else //or do layer 3
+                {
+                    if(sjf_queue.size())
+                    {
+                        cur_layer=3;
+                        min_pid=0;
+                        int min_burst=INT_MAX;
+                        //serach from end for min pid
+                        for(int i=sjf_queue.size()-1;i>=0;i--)
+                        {
+                            if(sjf_queue[i].burst_time_run<min_burst)
+                            {
+                                min_pid=i;
+                                min_burst=sjf_queue[i].burst_time_run;
+                            }
+                        }
+                        //finished 3 before going to upper layer so current_time_quantum is still positive to run
+                        cur_time_quantum=sjf_queue[min_pid].burst_time_run-1;
+                        sjf_queue[min_pid].burst_time_run--;
+
+                        if(sjf_queue[0].burst_time_run==0)
+                        {
+                            sjf_queue[min_pid].waiting_time=time_el-sjf_queue[min_pid].arrival_time-sjf_queue[min_pid].burst_time+1;
+                            sjf_queue[min_pid].ta_time=time_el-sjf_queue[min_pid].arrival_time+1;
+
+                            result.push_back(sjf_queue[min_pid]);
+
+                            sjf_queue.erase(sjf_queue.begin()+min_pid);
+
+                            tcase--;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        if(cur_time_quantum>0&&cur_layer==1&&ready_queue[1].size()==0) //a layer has been done, reset, no switch_job is needed.
+        {
+            switch_job==0;
+            cur_time_quantum=0;
+        }
+        if(cur_time_quantum>0&&cur_layer==2&&ready_queue[2].size()==0)
+        {
+            switch_job==0;
+            cur_time_quantum=0;
+        }
+
+        time_el++;
+    }
+
+
+    return result;
+}
 int main()
 {
     fstream fptr;
@@ -199,7 +249,6 @@ int main()
     tcase=data_in[0];
     time_quantum_1=data_in[tcase*2+1];
     time_quantum_2=data_in[tcase*2+2];
-    //printf("Time qty 1 %d qty2 %d INITIL T CASE IS %d\n",time_quantum_1,time_quantum_2,tcase);
     cnt=0;
     //fetching data
     for(int i=1;i<=tcase*2;i++)
@@ -211,7 +260,7 @@ int main()
             process[cnt].process_id=cnt; //no+1
             process[cnt].waiting_time=0;
             process[cnt].ta_time=0;
-            process[cnt].layer=0; //all of them at first layer
+            process[cnt].in_ready=0; //all of them at first layer
             cnt++;//count up for one data
             if(cnt==tcase)
             {
@@ -222,39 +271,21 @@ int main()
         else
         {
             process[cnt].burst_time=data_in[i];
+            process[cnt].burst_time_run=data_in[i];
             cnt++;
         }
     }
-    //find the first process to execute
+    vector<one_process> result=mul_level_queue();
+    sort(result.begin(),result.end(),mycompare);
+    cout<<"Process     Waiting Time     Turnaround Time "<<endl;
     for(int i=0;i<process.size();i++)
-    {
-        if(process[i].arrival_time==0)
-        {
-            process[i].waiting_time=0;
-            cur_pid=i;
-            break;
-        }
-    }
-    //initilaize the ready_queue in layer 0 and layer 1
-    ready_queue.resize(3);
-    //start to do MLFQ
-    while(tcase)
-    {
-        round_robin(time_quantum_1,0);
-        if(ready_queue[0].size()==0)
-            round_robin(time_quantum_2,1);
-        if(ready_queue[1].size()==0)
-            sjf(2);
-    }
-    cout<<"Process     Waiting Time     Turnaround Time"<<endl;
-    for(int i=0;i<process.size();i++)
-        cout<<setw(12)<<left<<trick(i+1)<<setw(17)<<left<<process[i].waiting_time<<setw(14)<<left<<process[i].ta_time<<endl;
+        cout<<setw(12)<<left<<trick(result[i].process_id+1)<<setw(17)<<left<<result[i].waiting_time<<setw(14)<<left<<result[i].ta_time<<endl;
 
     int total_wt=0,total_tt=0;
     for(int i=0;i<process.size();i++)
     {
-        total_wt+=process[i].waiting_time;
-        total_tt+=process[i].ta_time;
+        total_wt+=result[i].waiting_time;
+        total_tt+=result[i].ta_time;
     }
 
     printf("Average waiting time: %lf\n",total_wt/(double)process.size());

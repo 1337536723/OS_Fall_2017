@@ -1,3 +1,7 @@
+// Student ID:
+// Name      :
+// Date      : 2017.11.03
+
 #include "bmpReader.h"
 #include "bmpReader.cpp"
 #include <stdio.h>
@@ -7,37 +11,47 @@
 #include <semaphore.h>
 using namespace std;
 
-#define THREAD_CNT 6
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
 
-int imgWidth, imgHeight, onethread_height;
+int imgWidth, imgHeight;
 int FILTER_SIZE;
 int FILTER_SCALE;
 int *filter_G;
 
-const char *inputfile_name[5] =
-{
+const char *inputfile_name[5] = {
 	"input1.bmp",
 	"input2.bmp",
 	"input3.bmp",
 	"input4.bmp",
 	"input5.bmp"
 };
-const char *outputBlur_name[5] =
-{
+const char *outputBlur_name[5] = {
 	"Blur1.bmp",
 	"Blur2.bmp",
 	"Blur3.bmp",
 	"Blur4.bmp",
 	"Blur5.bmp"
 };
+/*
+const char *outputSobel_name[5] = {
+	"Sobel1.bmp",
+	"Sobel2.bmp",
+	"Sobel3.bmp",
+	"Sobel4.bmp",
+	"Sobel5.bmp"
+};*/
 
 unsigned char *pic_in, *pic_grey, *pic_blur, *pic_final;
+
 unsigned char RGB2grey(int w, int h)
 {
-	int tmp =(pic_in[3 * (h*imgWidth + w) + MYRED] +pic_in[3 * (h*imgWidth + w) + MYGREEN] +pic_in[3 * (h*imgWidth + w) + MYBLUE])/3;
+	int tmp = (
+		pic_in[3 * (h*imgWidth + w) + MYRED] +
+		pic_in[3 * (h*imgWidth + w) + MYGREEN] +
+		pic_in[3 * (h*imgWidth + w) + MYBLUE] )/3;
+
 	if (tmp < 0) tmp = 0;
 	if (tmp > 255) tmp = 255;
 	return (unsigned char)tmp;
@@ -103,117 +117,13 @@ unsigned char GaussianFilter(int w, int h)
 		}
 
 	}
-		/*for (int i = 0; i<ws; i++)
-			{
-				a = w + i - (ws / 2);
-				b = h + j - (ws / 2);
 
-				// detect for borders of the image
-				if (a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
-
-				tmp += filter_G[j*ws + i] * pic_grey[b*imgWidth + a];
-			}*/
 	tmp /= FILTER_SCALE;
 	if (tmp < 0) tmp = 0;
 	if (tmp > 255) tmp = 255;
 	return (unsigned char)tmp;
 }
-//multithread image processing
 
-void* onethread_process_grey(void* args)
-{
-	int cur_thread=atoi(args), upper_bound=cur_thread+1;
-	//last one, uneven divide
-	if(cur_thread*==THREAD_CNT-1)
-	{
-		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
-		{
-			for(int j=0;j<imgWidth;j++)
-			{
-				pic_grey[i*imgWidth + j] = RGB2grey(j, i);
-			}
-		}
-	}
-	else
-	{
-		for(int i=cur_thread*onethread_height;i<onethread_width*upper_bound;i++)
-		{
-			for(int j=0;j<imgWidth;j++)
-			{
-				pic_grey[i*imgWidth + j] = RGB2grey(j, i);
-			}
-		}
-	}
-	pthread_exit(EXIT_SUCCESS);
-}
-void multithread_grey()
-{
-	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
-	printf("OTH %d", onethread_height);
-	pthread_t thread_id[THREAD_CNT];
-	/* pthread_create usage
-	int pthread_create(pthread_t *thread,
-				  const pthread_attr_t *restrict_attr,
-				  void*(*start_rtn)(void*),
-				  void *restrict arg);
-	*/
-	for(int cur_thread=0;i<THREAD_CNT;cur_thread++)
-	{
-		pthread_create(thread_id[cur_thread],NULL,onethread_process_grey,cur_thread);
-	}
-	for(int cur_thread=0;i<THREAD_CNT;cur_thread++)
-	{
-		pthread_join(thread_id[cur_thread],NULL);
-	}
-
-}
-void* onethread_process_gaussian(void* args)
-{
-	int cur_thread=atoi(args), upper_bound=cur_thread+1;
-	//last one, uneven divide
-	if(cur_thread*==THREAD_CNT-1)
-	{
-		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
-		{
-			for(int j=0;j<imgWidth;j++)
-			{
-				pic_blur[i*imgWidth + j]=GaussianFilter(j/*col*/,i/*row*/);
-			}
-		}
-	}
-	else
-	{
-		for(int i=cur_thread*onethread_height;i<onethread_width*upper_bound;i++)
-		{
-			for(int j=0;j<imgWidth;j++)
-			{
-				pic_blur[i*imgWidth + j]=GaussianFilter(j/*col*/,i/*row*/);
-			}
-		}
-	}
-	pthread_exit(EXIT_SUCCESS);
-}
-void multithread_gaussian(unsigned char* pic_grey, unsigned char* pic_blur)
-{
-	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
-	printf("%d, %d",onethread_width, onethread_height);
-	pthread_t thread_id[THREAD_CNT];
-	/* pthread_create usage
-	int pthread_create(pthread_t *thread,
-				  const pthread_attr_t *restrict_attr,
-				  void*(*start_rtn)(void*),
-				  void *restrict arg);
-	*/
-	for(int cur_thread=0;i<THREAD_CNT;cur_thread++)
-	{
-		pthread_create(thread_id[cur_thread],NULL,onethread_process_gaussian,cur_thread);
-	}
-	for(int cur_thread=0;i<THREAD_CNT;cur_thread++)
-	{
-		pthread_join(thread_id[cur_thread],NULL);
-	}
-
-}
 int main()
 {
 	// read mask file
@@ -229,8 +139,7 @@ int main()
 
 
 	BmpReader* bmpReader = new BmpReader();
-	for (int k = 0; k<5; k++)
-	{
+	for (int k = 0; k<5; k++){
 		// read input BMP file
 		pic_in = bmpReader->ReadBMP(inputfile_name[k], &imgWidth, &imgHeight);
 		// allocate space for output image
@@ -239,29 +148,22 @@ int main()
 		pic_final = (unsigned char*)malloc(3 * imgWidth*imgHeight*sizeof(unsigned char));
 
 		//convert RGB image to grey image
-		/*for (int j = 0; j<imgHeight; j++)
-		{
-			for (int i = 0; i<imgWidth; i++)
-			{
+		for (int j = 0; j<imgHeight; j++) {
+			for (int i = 0; i<imgWidth; i++){
 				pic_grey[j*imgWidth + i] = RGB2grey(i, j);
 			}
-		}*/
+		}
 
 		//apply the Gaussian filter to the image
-		multithread_gaussian(pic_grey,pic_blur);
-		/*for (int j = 0; j<imgHeight; j++)
-		{
-			for (int i = 0; i<imgWidth; i++)
-			{
+		for (int j = 0; j<imgHeight; j++) {
+			for (int i = 0; i<imgWidth; i++){
 				pic_blur[j*imgWidth + i] = GaussianFilter(i, j);
 			}
-		}*/
+		}
 
 		//extend the size form WxHx1 to WxHx3
-		for (int j = 0; j<imgHeight; j++)
-		{
-			for (int i = 0; i<imgWidth; i++)
-			{
+		for (int j = 0; j<imgHeight; j++) {
+			for (int i = 0; i<imgWidth; i++){
 				pic_final[3 * (j*imgWidth + i) + MYRED] = pic_blur[j*imgWidth + i];
 				pic_final[3 * (j*imgWidth + i) + MYGREEN] = pic_blur[j*imgWidth + i];
 				pic_final[3 * (j*imgWidth + i) + MYBLUE] = pic_blur[j*imgWidth + i];

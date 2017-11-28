@@ -9,11 +9,16 @@
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
+#pragma once
 using namespace std;
-int imgWidth, imgHeight, onethread_height;
+unsigned char *pic_in, *pic_grey, *pic_blur, *pic_final;
+long cur_thread;
+int imgWidth, imgHeight, onethread_height, upper_bound;
 int FILTER_SIZE;
 int FILTER_SCALE;
+
 int *filter_G;
+
 
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
@@ -34,8 +39,8 @@ const char *outputBlur_name[5] =
 	"Blur5.bmp"
 };
 
-unsigned char *pic_in, *pic_grey, *pic_blur, *pic_final;
-unsigned char RGB2grey(int w, int h)
+
+inline unsigned char RGB2grey(int w, int h)
 {
 	int tmp =(pic_in[3 * (h*imgWidth + w) + MYRED] +pic_in[3 * (h*imgWidth + w) + MYGREEN] +pic_in[3 * (h*imgWidth + w) + MYBLUE])/3;
 	if (tmp < 0) tmp = 0;
@@ -43,12 +48,13 @@ unsigned char RGB2grey(int w, int h)
 	return (unsigned char)tmp;
 }
 
-unsigned char GaussianFilter(int w, int h)
+inline unsigned char GaussianFilter(int w, int h)
 {
 	//w col, h row
-	int tmp = 0;
+
+	int tmp = 0x0;
 	int a, b;
-	int ws = (int)sqrt((float)FILTER_SIZE);
+	int ws = (int) sqrt((float)FILTER_SIZE);
 	switch(ws)
 	{
 		case 3:
@@ -206,19 +212,19 @@ unsigned char GaussianFilter(int w, int h)
 	}
 
 	tmp /= FILTER_SCALE;
-	if (tmp < 0) tmp = 0;
-	if (tmp > 255) tmp = 255;
+	if (tmp < 0x0U) tmp = 0;
+	if (tmp > 0xFFU) tmp = 255;
 	return (unsigned char)tmp;
 }
 //multithread image processing
 
-void* onethread_process_grey(void* args)
+inline void* onethread_process_grey(void* args)
 {
-	long cur_thread=(long)args;
+	cur_thread=(long)args;
 
-	int upper_bound=cur_thread+1;
+	upper_bound=cur_thread+1;
 	//last one, uneven divide
-	if(cur_thread==THREAD_CNT-1)
+	if(!(cur_thread^(THREAD_CNT-1))/*cur_thread==THREAD_CNT-1*/)
 	{
 		//printf("cur thread last %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
@@ -242,9 +248,9 @@ void* onethread_process_grey(void* args)
 	}
 	pthread_exit(EXIT_SUCCESS);
 }
-void multithread_grey()
+inline void multithread_grey()
 {
-	int onethread_height = imgHeight / THREAD_CNT; //split by row
+	onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
 	for(long cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
@@ -258,13 +264,13 @@ void multithread_grey()
 	}
 
 }
-void* onethread_process_gaussian(void* args)
+inline void* onethread_process_gaussian(void* args)
 {
-	long cur_thread=(long)args;
+	cur_thread=(long)args;
 
-	int upper_bound=cur_thread+1;
+	upper_bound=cur_thread+1;
 	//last one, uneven divide
-	if(cur_thread==THREAD_CNT-1)
+	if(!(cur_thread^(THREAD_CNT-1)))
 	{
 		//printf("cur thread last %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
@@ -288,9 +294,9 @@ void* onethread_process_gaussian(void* args)
 	}
 	pthread_exit(EXIT_SUCCESS);
 }
-void multithread_gaussian()
+inline void multithread_gaussian()
 {
-	int onethread_height = imgHeight / THREAD_CNT; //split by row
+	onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
 
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)

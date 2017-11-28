@@ -5,17 +5,17 @@
 #include <math.h>
 #include <pthread.h>
 #include <semaphore.h>
-using namespace std;
-
 #define THREAD_CNT 6
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
-
+using namespace std;
 int imgWidth, imgHeight, onethread_height;
 int FILTER_SIZE;
 int FILTER_SCALE;
 int *filter_G;
+
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
 const char *inputfile_name[5] =
 {
@@ -328,10 +328,10 @@ int main()
 		pic_grey = (unsigned char*)malloc(imgWidth*imgHeight*sizeof(unsigned char));
 		pic_blur = (unsigned char*)malloc(imgWidth*imgHeight*sizeof(unsigned char));
 		pic_final = (unsigned char*)malloc(3 * imgWidth*imgHeight*sizeof(unsigned char));
-
+		pthread_mutex_lock(&mutex1);
 		multithread_grey();
 		multithread_gaussian();
-
+		pthread_mutex_unlock(&mutex1);
 		for (int j = 0; j<imgHeight; j++)
 		{
 			for (int i = 0; i<imgWidth; i++)

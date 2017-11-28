@@ -7,4 +7,4 @@
 ./MAE.out ANS/Blur4.bmp Blur4.bmp
 ./MAE.out ANS/Blur5.bmp Blur5.bmp
 
-./speed.sh
+./Speed.sh

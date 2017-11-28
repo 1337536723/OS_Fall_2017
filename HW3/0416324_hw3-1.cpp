@@ -42,16 +42,6 @@ unsigned char RGB2grey(int w, int h)
 	if (tmp > 255) tmp = 255;
 	return (unsigned char)tmp;
 }
-/*for (int i = 0; i<ws; i++)
-	{
-		a = w + i - (ws / 2);
-		b = h + j - (ws / 2);
-
-		// detect for borders of the image
-		if (a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
-
-		tmp += filter_G[j*ws + i] * pic_grey[b*imgWidth + a];
-	}*/
 unsigned char GaussianFilter(int w, int h)
 {
 	//w col, h row
@@ -122,13 +112,13 @@ unsigned char GaussianFilter(int w, int h)
 
 void* onethread_process_grey(void* args)
 {
-	int cur_thread=*((int *)args);
+	long cur_thread=(long)args;
 
 	int upper_bound=cur_thread+1;
 	//last one, uneven divide
 	if(cur_thread==THREAD_CNT-1)
 	{
-		printf("cur thread last %d\n",cur_thread);
+		//printf("cur thread last %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
 		{
 			for(int j=0;j<imgWidth;j++)
@@ -139,7 +129,7 @@ void* onethread_process_grey(void* args)
 	}
 	else
 	{
-			printf("cur thread %d\n",cur_thread);
+			//printf("cur thread %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<onethread_height*upper_bound;i++)
 		{
 			for(int j=0;j<imgWidth;j++)
@@ -153,7 +143,6 @@ void* onethread_process_grey(void* args)
 void multithread_grey()
 {
 	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
-	printf("OTH %d", onethread_height);
 	pthread_t thread_id[THREAD_CNT];
 	/* pthread_create usage
 	int pthread_create(pthread_t *thread,
@@ -161,25 +150,27 @@ void multithread_grey()
 				  void*(*start_rtn)(void*),
 				  void *restrict arg);
 	*/
-	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(long cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
-		pthread_create(&thread_id[cur_thread],NULL,onethread_process_grey,&cur_thread);
+		pthread_create(&thread_id[cur_thread],NULL,onethread_process_grey,(void *) cur_thread);
+		//printf("Grey cur thread id created %u\n",&thread_id[cur_thread]);
 	}
-	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
+		//printf("Grey cur thread id pass in %u\n",&thread_id[cur_thread]);
 		pthread_join(thread_id[cur_thread],NULL);
 	}
 
 }
 void* onethread_process_gaussian(void* args)
 {
-	int cur_thread=*((int *)args);
+	long cur_thread=(long)args;
 
 	int upper_bound=cur_thread+1;
 	//last one, uneven divide
 	if(cur_thread==THREAD_CNT-1)
 	{
-		printf("cur thread last %d\n",cur_thread);
+		//printf("cur thread last %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
 		{
 			for(int j=0;j<imgWidth;j++)
@@ -190,7 +181,7 @@ void* onethread_process_gaussian(void* args)
 	}
 	else
 	{
-		printf("cur thread %d\n",cur_thread);
+		//printf("cur thread %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<onethread_height*upper_bound;i++)
 		{
 			for(int j=0;j<imgWidth;j++)
@@ -201,10 +192,9 @@ void* onethread_process_gaussian(void* args)
 	}
 	pthread_exit(EXIT_SUCCESS);
 }
-void multithread_gaussian(unsigned char* pic_grey, unsigned char* pic_blur)
+void multithread_gaussian()
 {
 	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
-	printf("OTH %d", onethread_height);
 	pthread_t thread_id[THREAD_CNT];
 	/* pthread_create usage
 	int pthread_create(pthread_t *thread,
@@ -212,12 +202,14 @@ void multithread_gaussian(unsigned char* pic_grey, unsigned char* pic_blur)
 				  void*(*start_rtn)(void*),
 				  void *restrict arg);
 	*/
-	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
-		pthread_create(&thread_id[cur_thread],NULL,onethread_process_gaussian,&cur_thread);
+		pthread_create(&thread_id[cur_thread],NULL,onethread_process_gaussian,(void *) cur_thread);
+		//printf("Gaussian cur thread id created%u\n",&thread_id[cur_thread]);
 	}
-	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
+		//printf("Gaussian cur thread id pass in%u \n",&thread_id[cur_thread]);
 		pthread_join(thread_id[cur_thread],NULL);
 	}
 
@@ -240,6 +232,7 @@ int main()
 	for (int k = 0; k<5; k++)
 	{
 		// read input BMP file
+		////printf("pic %d \n",k+1);
 		pic_in = bmpReader->ReadBMP(inputfile_name[k], &imgWidth, &imgHeight);
 		// allocate space for output image
 		pic_grey = (unsigned char*)malloc(imgWidth*imgHeight*sizeof(unsigned char));
@@ -247,7 +240,7 @@ int main()
 		pic_final = (unsigned char*)malloc(3 * imgWidth*imgHeight*sizeof(unsigned char));
 
 		multithread_grey();
-		multithread_gaussian(pic_grey,pic_blur);
+		multithread_gaussian();
 
 		for (int j = 0; j<imgHeight; j++)
 		{

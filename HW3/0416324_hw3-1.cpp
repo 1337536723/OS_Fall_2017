@@ -244,14 +244,8 @@ void* onethread_process_grey(void* args)
 }
 void multithread_grey()
 {
-	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
+	int onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
-	/* pthread_create usage
-	int pthread_create(pthread_t *thread,
-				  const pthread_attr_t *restrict_attr,
-				  void*(*start_rtn)(void*),
-				  void *restrict arg);
-	*/
 	for(long cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_grey,(void *) cur_thread);
@@ -296,14 +290,9 @@ void* onethread_process_gaussian(void* args)
 }
 void multithread_gaussian()
 {
-	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
+	int onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
-	/* pthread_create usage
-	int pthread_create(pthread_t *thread,
-				  const pthread_attr_t *restrict_attr,
-				  void*(*start_rtn)(void*),
-				  void *restrict arg);
-	*/
+
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_gaussian,(void *) cur_thread);
@@ -334,7 +323,6 @@ int main()
 	for (int k = 0; k<5; k++)
 	{
 		// read input BMP file
-		////printf("pic %d \n",k+1);
 		pic_in = bmpReader->ReadBMP(inputfile_name[k], &imgWidth, &imgHeight);
 		// allocate space for output image
 		pic_grey = (unsigned char*)malloc(imgWidth*imgHeight*sizeof(unsigned char));
@@ -366,3 +354,9 @@ int main()
 
 	return 0;
 }
+/* pthread_create usage
+int pthread_create(pthread_t *thread,
+			  const pthread_attr_t *restrict_attr,
+			  void*(*start_rtn)(void*),
+			  void *restrict arg);
+*/

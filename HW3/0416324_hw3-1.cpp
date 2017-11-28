@@ -5,23 +5,18 @@
 #include <math.h>
 #include <pthread.h>
 #include <semaphore.h>
+using namespace std;
+
 #define THREAD_CNT 6
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
-#pragma once
-using namespace std;
-unsigned char *pic_in, *pic_grey, *pic_blur, *pic_final;
-long cur_thread;
-int imgWidth, imgHeight, onethread_height, upper_bound;
+
+int imgWidth, imgHeight, onethread_height;
 int FILTER_SIZE;
 int FILTER_SCALE;
-
 int *filter_G;
-
-
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
-
 const char *inputfile_name[5] =
 {
 	"input1.bmp",
@@ -39,8 +34,8 @@ const char *outputBlur_name[5] =
 	"Blur5.bmp"
 };
 
-
-inline unsigned char RGB2grey(int w, int h)
+unsigned char *pic_in, *pic_grey, *pic_blur, *pic_final;
+unsigned char RGB2grey(int w, int h)
 {
 	int tmp =(pic_in[3 * (h*imgWidth + w) + MYRED] +pic_in[3 * (h*imgWidth + w) + MYGREEN] +pic_in[3 * (h*imgWidth + w) + MYBLUE])/3;
 	if (tmp < 0) tmp = 0;
@@ -48,13 +43,12 @@ inline unsigned char RGB2grey(int w, int h)
 	return (unsigned char)tmp;
 }
 
-inline unsigned char GaussianFilter(int w, int h)
+unsigned char GaussianFilter(int w, int h)
 {
 	//w col, h row
-
-	int tmp = 0x0;
+	int tmp = 0;
 	int a, b;
-	int ws = (int) sqrt((float)FILTER_SIZE);
+	int ws = (int)sqrt((float)FILTER_SIZE);
 	switch(ws)
 	{
 		case 3:
@@ -212,19 +206,19 @@ inline unsigned char GaussianFilter(int w, int h)
 	}
 
 	tmp /= FILTER_SCALE;
-	if (tmp < 0x0U) tmp = 0;
-	if (tmp > 0xFFU) tmp = 255;
+	if (tmp < 0) tmp = 0;
+	if (tmp > 255) tmp = 255;
 	return (unsigned char)tmp;
 }
 //multithread image processing
 
-inline void* onethread_process_grey(void* args)
+void* onethread_process_grey(void* args)
 {
-	cur_thread=(long)args;
+	long cur_thread=(long)args;
 
-	upper_bound=cur_thread+1;
+	int upper_bound=cur_thread+1;
 	//last one, uneven divide
-	if(!(cur_thread^(THREAD_CNT-1))/*cur_thread==THREAD_CNT-1*/)
+	if(cur_thread==THREAD_CNT-1)
 	{
 		//printf("cur thread last %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
@@ -248,10 +242,16 @@ inline void* onethread_process_grey(void* args)
 	}
 	pthread_exit(EXIT_SUCCESS);
 }
-inline void multithread_grey()
+void multithread_grey()
 {
-	onethread_height = imgHeight / THREAD_CNT; //split by row
+	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
+	/* pthread_create usage
+	int pthread_create(pthread_t *thread,
+				  const pthread_attr_t *restrict_attr,
+				  void*(*start_rtn)(void*),
+				  void *restrict arg);
+	*/
 	for(long cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_grey,(void *) cur_thread);
@@ -264,13 +264,13 @@ inline void multithread_grey()
 	}
 
 }
-inline void* onethread_process_gaussian(void* args)
+void* onethread_process_gaussian(void* args)
 {
-	cur_thread=(long)args;
+	long cur_thread=(long)args;
 
-	upper_bound=cur_thread+1;
+	int upper_bound=cur_thread+1;
 	//last one, uneven divide
-	if(!(cur_thread^(THREAD_CNT-1)))
+	if(cur_thread==THREAD_CNT-1)
 	{
 		//printf("cur thread last %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
@@ -294,11 +294,16 @@ inline void* onethread_process_gaussian(void* args)
 	}
 	pthread_exit(EXIT_SUCCESS);
 }
-inline void multithread_gaussian()
+void multithread_gaussian()
 {
-	onethread_height = imgHeight / THREAD_CNT; //split by row
+	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
-
+	/* pthread_create usage
+	int pthread_create(pthread_t *thread,
+				  const pthread_attr_t *restrict_attr,
+				  void*(*start_rtn)(void*),
+				  void *restrict arg);
+	*/
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_gaussian,(void *) cur_thread);
@@ -329,6 +334,7 @@ int main()
 	for (int k = 0; k<5; k++)
 	{
 		// read input BMP file
+		////printf("pic %d \n",k+1);
 		pic_in = bmpReader->ReadBMP(inputfile_name[k], &imgWidth, &imgHeight);
 		// allocate space for output image
 		pic_grey = (unsigned char*)malloc(imgWidth*imgHeight*sizeof(unsigned char));
@@ -360,9 +366,3 @@ int main()
 
 	return 0;
 }
-/* pthread_create usage
-int pthread_create(pthread_t *thread,
-			  const pthread_attr_t *restrict_attr,
-			  void*(*start_rtn)(void*),
-			  void *restrict arg);
-*/

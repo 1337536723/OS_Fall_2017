@@ -1,4 +1,4 @@
-/* 
+/*
 	You can NOT modify anything in this file.
 */
 #include <stdio.h>
@@ -6,7 +6,7 @@
 
 unsigned char* BmpReader::ReadBMP(char const *f, int *a_width, int *a_height )
 {
-	fp_s = NULL;    // source file handler	
+	fp_s = NULL;    // source file handler
 	image_s = NULL; // source image array
 
 	static unsigned char tmp_header[54] = {
@@ -24,7 +24,7 @@ unsigned char* BmpReader::ReadBMP(char const *f, int *a_width, int *a_height )
 		0, 0, 0, 0,  // compression
 		0, 0, 0, 0,  // data size
 		0, 0, 0, 0,  // h resolution
-		0, 0, 0, 0,  // v resolution 
+		0, 0, 0, 0,  // v resolution
 		0, 0, 0, 0,  // used colors
 		0, 0, 0, 0   // important colors
 	};
@@ -40,11 +40,11 @@ unsigned char* BmpReader::ReadBMP(char const *f, int *a_width, int *a_height )
 	fseek(fp_s, 10, SEEK_SET);
 	fread(&rgb_raw_data_offset, sizeof(unsigned int), 1, fp_s);
 	// move offset to 18    to get width & height;
-	fseek(fp_s, 18, SEEK_SET); 
+	fseek(fp_s, 18, SEEK_SET);
 	fread(&width,  sizeof(unsigned int), 1, fp_s);
 	fread(&height, sizeof(unsigned int), 1, fp_s);
 	// get  bit per pixel
-	fseek(fp_s, 28, SEEK_SET); 
+	fseek(fp_s, 28, SEEK_SET);
 	fread(&bit_per_pixel, sizeof(unsigned short), 1, fp_s);
 	byte_per_pixel = bit_per_pixel / 8;
 	// move offset to rgb_raw_data_offset to get RGB raw data
@@ -67,7 +67,7 @@ unsigned char* BmpReader::ReadBMP(char const *f, int *a_width, int *a_height )
 
 int BmpReader::WriteBMP(char const *f, int a_width, int a_height, unsigned char *ptr )
 {
-	fp_t = NULL;    // target file handler 
+	fp_t = NULL;    // target file handler
 
 	// write to new bmp
 	fp_t = fopen(f, "wb");
@@ -76,7 +76,7 @@ int BmpReader::WriteBMP(char const *f, int a_width, int a_height, unsigned char 
 		return -1;
 	}
 
-	// file size  
+	// file size
 	file_size = width * height * byte_per_pixel + rgb_raw_data_offset;
 	header[2] = (unsigned char)(file_size & 0x000000ff);
 	header[3] = (file_size >> 8)  & 0x000000ff;
@@ -102,7 +102,7 @@ int BmpReader::WriteBMP(char const *f, int a_width, int a_height, unsigned char 
 	fwrite(header, sizeof(unsigned char), rgb_raw_data_offset, fp_t);
 	// write image
 	fwrite(ptr, sizeof(unsigned char), (size_t)(long)width * height * byte_per_pixel, fp_t);
-	
+
 	fclose(fp_t);
 
 	return 0;

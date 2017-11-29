@@ -46,166 +46,20 @@ inline unsigned char RGB2grey(int w, int h)
 inline unsigned char GaussianFilter(int w, int h) __attribute__((optimize("-O3")));
 inline unsigned char GaussianFilter(int w, int h)
 {
-	//w col, h row
 	int tmp = 0;
 	int a, b;
 	int ws = (int)sqrt((float)FILTER_SIZE);
-	switch(ws)
+	for (int j = 0; j<ws; j++)
+	for (int i = 0; i<ws; i++)
 	{
-		case 3:
-		{
-			a = w - (ws / 2);
-			b = h + 0 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[0*ws + 0] * pic_grey[b*imgWidth + a];
-			a = w - (ws / 2);
-			b = h + 1 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[1*ws + 0] * pic_grey[b*imgWidth + a];
-			a = w - (ws / 2);
-			b = h + 2 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[2*ws + 0] * pic_grey[b*imgWidth + a];
+		a = w + i - (ws / 2);
+		b = h + j - (ws / 2);
 
-			a = w + 1 - (ws / 2);
-			b = h + 0 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[0*ws + 1] * pic_grey[b*imgWidth + a];
-			a = w + 1 - (ws / 2);
-			b = h + 1 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[1*ws + 1] * pic_grey[b*imgWidth + a];
-			a = w + 1 - (ws / 2);
-			b = h + 2 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[2*ws + 1] * pic_grey[b*imgWidth + a];
+		// detect for borders of the image
+		if (a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
 
-			a = w + 2 - (ws / 2);
-			b = h + 0 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[0*ws + 2] * pic_grey[b*imgWidth + a];
-			a = w + 2 - (ws / 2);
-			b = h + 1 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[1*ws + 2] * pic_grey[b*imgWidth + a];
-			a = w + 2 - (ws / 2);
-			b = h + 2 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[2*ws + 2] * pic_grey[b*imgWidth + a];
-
-			break;
-		}
-		case 5:
-		{
-			a = w - (ws / 2);
-			b = h + 0 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[0*ws + 0] * pic_grey[b*imgWidth + a];
-			a = w - (ws / 2);
-			b = h + 1 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[1*ws + 0] * pic_grey[b*imgWidth + a];
-			a = w - (ws / 2);
-			b = h + 2 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[2*ws + 0] * pic_grey[b*imgWidth + a];
-			a = w - (ws / 2);
-			b = h + 3 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[3*ws + 0] * pic_grey[b*imgWidth + a];
-			a = w - (ws / 2);
-			b = h + 4 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[4*ws + 0] * pic_grey[b*imgWidth + a];
-
-			a = w + 1 - (ws / 2);
-			b = h + 0 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[0*ws + 1] * pic_grey[b*imgWidth + a];
-			a = w + 1 - (ws / 2);
-			b = h + 1 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[1*ws + 1] * pic_grey[b*imgWidth + a];
-			a = w + 1 - (ws / 2);
-			b = h + 2 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[2*ws + 1] * pic_grey[b*imgWidth + a];
-			a = w + 1 - (ws / 2);
-			b = h + 3 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[3*ws + 1] * pic_grey[b*imgWidth + a];
-			a = w + 1 - (ws / 2);
-			b = h + 4 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[4*ws + 1] * pic_grey[b*imgWidth + a];
-
-			a = w + 2 - (ws / 2);
-			b = h + 0 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[0*ws + 2] * pic_grey[b*imgWidth + a];
-			a = w + 2 - (ws / 2);
-			b = h + 1 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[1*ws + 2] * pic_grey[b*imgWidth + a];
-			a = w + 2 - (ws / 2);
-			b = h + 2 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[2*ws + 2] * pic_grey[b*imgWidth + a];
-			a = w + 2 - (ws / 2);
-			b = h + 3 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[3*ws + 2] * pic_grey[b*imgWidth + a];
-			a = w + 2 - (ws / 2);
-			b = h + 4 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[4*ws + 2] * pic_grey[b*imgWidth + a];
-
-			a = w + 3 - (ws / 2);
-			b = h + 0 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[0*ws + 3] * pic_grey[b*imgWidth + a];
-			a = w + 3 - (ws / 2);
-			b = h + 1 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[1*ws + 3] * pic_grey[b*imgWidth + a];
-			a = w + 3 - (ws / 2);
-			b = h + 2 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[2*ws + 3] * pic_grey[b*imgWidth + a];
-			a = w + 3 - (ws / 2);
-			b = h + 3 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[3*ws + 3] * pic_grey[b*imgWidth + a];
-			a = w + 3 - (ws / 2);
-			b = h + 4 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[4*ws + 3] * pic_grey[b*imgWidth + a];
-
-			a = w + 4 - (ws / 2);
-			b = h + 0 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[0*ws + 4] * pic_grey[b*imgWidth + a];
-			a = w + 4 - (ws / 2);
-			b = h + 1 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[1*ws + 4] * pic_grey[b*imgWidth + a];
-			a = w + 4 - (ws / 2);
-			b = h + 2 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[2*ws + 4] * pic_grey[b*imgWidth + a];
-			a = w + 4 - (ws / 2);
-			b = h + 3 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[3*ws + 4] * pic_grey[b*imgWidth + a];
-			a = w + 4 - (ws / 2);
-			b = h + 4 - (ws / 2);
-			if (!(a<0 || b<0 || a>=imgWidth || b>=imgHeight))
-				tmp += filter_G[4*ws + 4] * pic_grey[b*imgWidth + a];
-
-			break;
-		}
-	}
-
+		tmp += filter_G[j*ws + i] * pic_grey[b*imgWidth + a];
+	};
 	tmp /= FILTER_SCALE;
 	if (tmp < 0) tmp = 0;
 	if (tmp > 255) tmp = 255;

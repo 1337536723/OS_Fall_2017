@@ -15,6 +15,7 @@ int imgWidth, imgHeight, onethread_height;
 int FILTER_SIZE;
 int FILTER_SCALE;
 int *filter_G;
+
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
 const char *inputfile_name[5] =
@@ -37,6 +38,18 @@ const char *outputBlur_name[5] =
 unsigned char *pic_in, *pic_grey, *pic_blur, *pic_final;
 inline unsigned char RGB2grey(int w, int h)
 {
+	//int logval=(int)log2(imgWidth);
+
+	//int rem=imgWidth-(int)pow(2,logval),tmp2=0;
+	//printf("rem %d, lg is %d and more %d , tmp2 =%d\n",rem,(int)pow(2,(int)log2(imgWidth)),(int)log2(imgWidth),tmp2);
+	//tmp2+=((h<<logval)+h*rem);
+	//printf("PLACE1 tmp2 value %d and real value %d and SHIFT value %d\n",tmp2,3 * (h*imgWidth + w),h*rem);
+	//tmp2+=w;
+	//printf("PLACE 2 tmp2 value %d and real value %d \n",tmp2,3 * (h*imgWidth + w));
+	//tmp2*=3;
+	//printf("PLACE 3 tmp2 value %d and real value %d \n",tmp2,3 * (h*imgWidth + w));
+	//printf("logval %d, w%d h%d rem %d\n",logval,w,h,rem);
+
 	int tmp2=3 * (h*imgWidth + w) ;
 	int tmp =(pic_in[tmp2+MYRED]+pic_in[tmp2+MYGREEN]+pic_in[tmp2+MYBLUE])/3;
 	if (tmp < 0) tmp = 0;
@@ -47,15 +60,15 @@ inline unsigned char GaussianFilter(int w, int h)
 {
 	register int tmp=0,tmp2,tmp3;
 	register int a, b;
-	int ws = (int)sqrt((float)FILTER_SIZE);
-	for (register int j = 0; j<ws; j++)
+	int filter_border = (int)sqrt((float)FILTER_SIZE);
+	for (register int j = 0; j<filter_border; j++)
 	{
-		tmp2=j*ws;
-		b = h + j - (ws / 2);
+		tmp2=j*filter_border;
+		b = h + j - (filter_border / 2);
 		tmp3=b*imgWidth;
-		for (register int i = 0; i<ws; i++)
+		for (register int i = 0; i<filter_border; i++)
 		{
-			a = w + i - (ws / 2);
+			a = w + i - (filter_border / 2);
 			// detect for borders of the image
 			if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
 			//inborder, do filter

@@ -1,5 +1,5 @@
  #!/bin/bash
-g++ -std=c++11 -pthread 0416324_hw3-1.cpp
+g++ -std=c++11 -pthread 0416324_hw3-1.cpp 
 #g++ -std=c++11 -pthread example_hw3-1.cpp
 ./a.out
 #gprof ./a.out gmon.out -p

@@ -7,7 +7,7 @@
 #include <semaphore.h>
 using namespace std;
 
-#define THREAD_CNT 4
+#define THREAD_CNT 2
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
@@ -104,7 +104,7 @@ inline void* onethread_process_grey(void* args)
 			tmp=i*imgWidth;
 			for(register int j=0;j<imgWidth;j++)
 			{
-				pic_grey[i*imgWidth + j] = RGB2grey(j, i);
+				pic_grey[tmp + j] = RGB2grey(j, i);
 			}
 		}
 	}
@@ -178,16 +178,16 @@ int main()
 		fscanf(mask, "%d", &filter_G[i]);
 	fclose(mask);
 
- 	register int tmp3,tmp4;
+ 	register int tmp3,tmp4,tmp5;
 	BmpReader* bmpReader = new BmpReader();
 	for (int k = 0; k<5; k++)
 	{
 		pic_in = bmpReader->ReadBMP(inputfile_name[k], &imgWidth, &imgHeight);
-		tmp3=imgWidth*imgHeight*sizeof(unsigned char);
-		pic_grey = (unsigned char*)malloc(tmp3);
-		pic_blur = (unsigned char*)malloc(tmp3);
-		pic_final = (unsigned char*)malloc((tmp3<<1)+tmp3);
-
+		tmp3=imgWidth*imgHeight;
+		pic_grey = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
+		pic_blur = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
+		pic_final = (unsigned char*)calloc((tmp3<<1)+tmp3,sizeof(unsigned char));
+		//cout<<666<<endl;
 		pthread_mutex_lock(&mutex1);
 		multithread_grey();
 		multithread_gaussian();
@@ -197,10 +197,11 @@ int main()
 			tmp3=j*imgWidth;
 			for (register int i = 0; i<imgWidth; i++)
 			{
-				tmp4=3 * int(tmp3 + i);
-				pic_final[tmp4 + MYRED] = pic_blur[tmp3 + i];
-				pic_final[tmp4 + MYGREEN] = pic_blur[tmp3 + i];
-				pic_final[tmp4 + MYBLUE] = pic_blur[tmp3 + i];
+				tmp5=tmp3+i;
+				tmp4=3 * (tmp3 + i);
+				pic_final[tmp4 + MYRED] = pic_blur[tmp5];
+				pic_final[tmp4 + MYGREEN] = pic_blur[tmp5];
+				pic_final[tmp4 + MYBLUE] = pic_blur[tmp5];
 			}
 		}
 		// write output BMP file

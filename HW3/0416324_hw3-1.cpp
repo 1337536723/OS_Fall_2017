@@ -7,7 +7,7 @@
 #include <semaphore.h>
 using namespace std;
 
-#define THREAD_CNT 6
+#define THREAD_CNT 4
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
@@ -45,8 +45,8 @@ inline unsigned char RGB2grey(int w, int h)
 }
 inline unsigned char GaussianFilter(int w, int h)
 {
-	int tmp=0,tmp2,tmp3,tmp4;
-	int a, b;
+	register int tmp=0,tmp2,tmp3;
+	register int a, b;
 	int ws = (int)sqrt((float)FILTER_SIZE);
 	for (register int j = 0; j<ws; j++)
 	{
@@ -72,7 +72,7 @@ inline void* onethread_process_grey(void* args)
 {
 	long cur_thread=(long)args;
 	int upper_bound=cur_thread+1;
-	int tmp;
+	register int tmp;
 	if(cur_thread==THREAD_CNT-1)
 	{
 		for(register int i=cur_thread*onethread_height;i<imgHeight;i++)
@@ -101,11 +101,11 @@ inline void multithread_grey()
 {
 	int onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
-	for(long cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_grey,(void *) cur_thread);
 	}
-	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_join(thread_id[cur_thread],NULL);
 	}
@@ -143,11 +143,11 @@ inline void multithread_gaussian()
 {
 	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
-	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_gaussian,(void *) cur_thread);
 	}
-	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_join(thread_id[cur_thread],NULL);
 	}
@@ -173,7 +173,7 @@ int main()
 		tmp3=imgWidth*imgHeight*sizeof(unsigned char);
 		pic_grey = (unsigned char*)malloc(tmp3);
 		pic_blur = (unsigned char*)malloc(tmp3);
-		pic_final = (unsigned char*)malloc(tmp3+tmp3+tmp3);
+		pic_final = (unsigned char*)malloc((tmp3<<1)+tmp3);
 
 		pthread_mutex_lock(&mutex1);
 		multithread_grey();
@@ -184,7 +184,7 @@ int main()
 			tmp3=j*imgWidth;
 			for (register int i = 0; i<imgWidth; i++)
 			{
-				tmp4=3 * (tmp3 + i);
+				tmp4=3 * int(tmp3 + i);
 				pic_final[tmp4 + MYRED] = pic_blur[tmp3 + i];
 				pic_final[tmp4 + MYGREEN] = pic_blur[tmp3 + i];
 				pic_final[tmp4 + MYBLUE] = pic_blur[tmp3 + i];

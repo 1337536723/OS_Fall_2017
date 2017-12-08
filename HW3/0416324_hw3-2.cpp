@@ -53,11 +53,11 @@ inline unsigned char sobel_filter(int w, int h)
 		for (register int j = 0; j<filter_border; ++j)
 		{
 			tmp2=j*filter_border;
-			b = h + j - (filter_border / 2);
+			b = h + j - (filter_border >>1);
 			tmp3=b*imgWidth;
 			for (register int i = 0; i<filter_border; ++i)
 			{
-				a = w + i - (filter_border / 2);
+				a = w + i - (filter_border >>1);
 				// detect for borders of the image
 				//if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
 				//inborder, do filter
@@ -71,11 +71,11 @@ inline unsigned char sobel_filter(int w, int h)
 		for (register int j = 0; j<filter_border; ++j)
 		{
 			tmp2=j*filter_border;
-			b = h + j - (filter_border / 2);
+			b = h + j - (filter_border >>1);
 			tmp3=b*imgWidth;
 			for (register int i = 0; i<filter_border; ++i)
 			{
-				a = w + i - (filter_border / 2);
+				a = w + i - (filter_border >>1);
 				// detect for borders of the image
 				if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
 				//inborder, do filter
@@ -89,8 +89,8 @@ inline unsigned char sobel_filter(int w, int h)
 	if (img_x<0) img_x=0;
 	if (img_y<0) img_y=0;
 	//int res=(int)sqrt(img_x*img_x+img_y*img_y);
+	// return ((int)(sqrt(img_x*img_x+img_y*img_y)))&0xFF;/*>255?255:(int)(sqrt(img_x*img_x+img_y*img_y))*/;
 	return ((int)(sqrt(img_x*img_x+img_y*img_y)))>255?255:(int)(sqrt(img_x*img_x+img_y*img_y));
-	//return res&0xFF;//((int)(sqrt(img_x*img_x+img_y*img_y)))>255?255:(int)(sqrt(img_x*img_x+img_y*img_y));
 }
 //multithread image processing
 

@@ -7,7 +7,7 @@
 #include <semaphore.h>
 using namespace std;
 
-#define THREAD_CNT 2
+#define THREAD_CNT 4
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
@@ -38,22 +38,8 @@ const char *outputBlur_name[5] =
 unsigned char *pic_in, *pic_grey, *pic_blur, *pic_final;
 inline unsigned char RGB2grey(int w, int h)
 {
-	//int logval=(int)log2(imgWidth);
-
-	//int rem=imgWidth-(int)pow(2,logval),tmp2=0;
-	//printf("rem %d, lg is %d and more %d , tmp2 =%d\n",rem,(int)pow(2,(int)log2(imgWidth)),(int)log2(imgWidth),tmp2);
-	//tmp2+=((h<<logval)+h*rem);
-	//printf("PLACE1 tmp2 value %d and real value %d and SHIFT value %d\n",tmp2,3 * (h*imgWidth + w),h*rem);
-	//tmp2+=w;
-	//printf("PLACE 2 tmp2 value %d and real value %d \n",tmp2,3 * (h*imgWidth + w));
-	//tmp2*=3;
-	//printf("PLACE 3 tmp2 value %d and real value %d \n",tmp2,3 * (h*imgWidth + w));
-	//printf("logval %d, w%d h%d rem %d\n",logval,w,h,rem);
-
 	int tmp2=3 * (h*imgWidth + w) ;
 	int tmp =(pic_in[tmp2+MYRED]+pic_in[tmp2+MYGREEN]+pic_in[tmp2+MYBLUE])/3;
-	// if (tmp < 0) tmp = 0;
-	// if (tmp > 255) tmp = 255;
 	return tmp&0xFF;
 }
 inline unsigned char GaussianFilter(int w, int h)
@@ -71,8 +57,6 @@ inline unsigned char GaussianFilter(int w, int h)
 			{
 				a = w + i - (filter_border >>1);
 				// detect for borders of the image
-				//if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
-				//inborder, do filter
 				tmp += filter_G[tmp2 + i] * pic_grey[tmp3 + a];
 			}
 		}

@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 using namespace std;
+
 #define THREAD_CNT 4
 #define MYRED	2
 #define MYGREEN 1
@@ -17,6 +18,7 @@ int FILTER_SCALE;
 int *filter_GX;
 int *filter_GY;
 sem_t binary_semaphore;
+
 const char *inputfile_name[5] =
 {
 	"input1.bmp",
@@ -85,7 +87,6 @@ inline unsigned char sobel_filter(int w, int h)
 		}
 	}
 
-
 	if (img_x<0) img_x=0;
 	if (img_y<0) img_y=0;
 	//int res=(int)sqrt(img_x*img_x+img_y*img_y);
@@ -99,6 +100,7 @@ inline void* onethread_process_grey(void* args)
 	long cur_thread=(long)args;
 	int upper_bound=cur_thread+1;
 	register int tmp;
+	sem_trywait(&binary_semaphore); //try lock if not locked
 	if(!(cur_thread^THREAD_CNT-1))
 	{
 		for(int i=cur_thread*onethread_height;i<imgHeight;++i)
@@ -121,6 +123,7 @@ inline void* onethread_process_grey(void* args)
 			}
 		}
 	}
+	sem_post(&binary_semaphore);
 	pthread_exit(EXIT_SUCCESS);
 }
 inline void multithread_grey()
@@ -133,9 +136,7 @@ inline void multithread_grey()
 	}
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
-		sem_trywait(&binary_semaphore); //try lock if not locked
 		pthread_join(thread_id[cur_thread],NULL);
-		sem_post(&binary_semaphore);
 	}
 }
 inline void* onethread_process_sobel(void* args)
@@ -144,6 +145,7 @@ inline void* onethread_process_sobel(void* args)
 	long cur_thread=(long)args;
 	int upper_bound=cur_thread+1;
 	register int tmp;
+	sem_trywait(&binary_semaphore);
 	if(!(cur_thread^THREAD_CNT-1))
 	{
 		for(int i=cur_thread*onethread_height;i<imgHeight;++i)
@@ -166,6 +168,7 @@ inline void* onethread_process_sobel(void* args)
 			}
 		}
 	}
+	sem_post(&binary_semaphore);
 	pthread_exit(EXIT_SUCCESS);
 }
 inline void multithread_sobel()
@@ -176,15 +179,11 @@ inline void multithread_sobel()
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_sobel,(void *) cur_thread);
-
 	}
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
-		sem_trywait(&binary_semaphore); //try lock if not locked
 		pthread_join(thread_id[cur_thread],NULL);
-		sem_post(&binary_semaphore);
 	}
-
 }
 int main()
 {
@@ -211,7 +210,6 @@ int main()
 		// read input BMP file
 		pic_in = bmpReader->ReadBMP(inputfile_name[k], &imgWidth, &imgHeight);
 		// allocate space for output image
-		// cout<<999<<endl;z
 		tmp3=imgWidth*imgHeight;
 		pic_grey = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
 		pic_blur = (unsigned char*)calloc(tmp3,sizeof(unsigned char));

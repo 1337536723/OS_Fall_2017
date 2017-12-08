@@ -87,6 +87,7 @@ inline void* onethread_process_grey(void* args)
 	long cur_thread=(long)args;
 	int upper_bound=cur_thread+1;
 	register int tmp;
+	pthread_mutex_lock(&mutex1);
 	if(!(cur_thread^THREAD_CNT-1))
 	{
 		for(register int i=cur_thread*onethread_height;i<imgHeight;++i)
@@ -109,6 +110,7 @@ inline void* onethread_process_grey(void* args)
 			}
 		}
 	}
+	pthread_mutex_unlock(&mutex1)
 	pthread_exit(EXIT_SUCCESS);
 }
 inline void multithread_grey()
@@ -121,9 +123,7 @@ inline void multithread_grey()
 	}
 	for(int cur_thread=0;cur_thread<THREAD_CNT;++cur_thread)
 	{
-		pthread_mutex_lock(&mutex1);
 		pthread_join(thread_id[cur_thread],NULL);
-		pthread_mutex_unlock(&mutex1);
 	}
 }
 inline void* onethread_process_gaussian(void* args)
@@ -131,6 +131,7 @@ inline void* onethread_process_gaussian(void* args)
 	long cur_thread=(long)args;
 	int upper_bound=cur_thread+1;
 	register int tmp;
+	pthread_mutex_lock(&mutex1);
 	if(!(cur_thread^THREAD_CNT-1))
 	{
 		for(register int i=cur_thread*onethread_height;i<imgHeight;++i)
@@ -153,6 +154,7 @@ inline void* onethread_process_gaussian(void* args)
 			}
 		}
 	}
+	pthread_mutex_unlock(&mutex1);
 	pthread_exit(EXIT_SUCCESS);
 }
 inline void multithread_gaussian()
@@ -165,9 +167,9 @@ inline void multithread_gaussian()
 	}
 	for(int cur_thread=0;cur_thread<THREAD_CNT;++cur_thread)
 	{
-		pthread_mutex_lock(&mutex1);
+
 		pthread_join(thread_id[cur_thread],NULL);
-		pthread_mutex_unlock(&mutex1);
+
 	}
 }
 int main()

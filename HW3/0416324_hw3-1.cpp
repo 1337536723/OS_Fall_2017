@@ -110,7 +110,7 @@ inline void* onethread_process_grey(void* args)
 			}
 		}
 	}
-	pthread_mutex_unlock(&mutex1)
+	pthread_mutex_unlock(&mutex1);
 	pthread_exit(EXIT_SUCCESS);
 }
 inline void multithread_grey()

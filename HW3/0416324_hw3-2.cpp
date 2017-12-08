@@ -48,21 +48,43 @@ inline unsigned char sobel_filter(int w, int h)
 	register int a=0, b=0;
 	int img_x=0,img_y=0;
 	// int filter_border = (int)sqrt((float)FILTER_SIZE);
-	for (register int j = 0; j<filter_border; ++j)
+	if(w>=filter_border&&w<imgWidth-filter_border&&h>=filter_border&&h<imgHeight-filter_border)
 	{
-		tmp2=j*filter_border;
-		b = h + j - (filter_border / 2);
-		tmp3=b*imgWidth;
-		for (register int i = 0; i<filter_border; ++i)
+		for (register int j = 0; j<filter_border; ++j)
 		{
-			a = w + i - (filter_border / 2);
-			// detect for borders of the image
-			if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
-			//inborder, do filter
-			img_x += filter_GX[tmp2 + i] * pic_grey[tmp3 + a];
-			img_y += filter_GY[tmp2 + i] * pic_grey[tmp3 + a];
+			tmp2=j*filter_border;
+			b = h + j - (filter_border / 2);
+			tmp3=b*imgWidth;
+			for (register int i = 0; i<filter_border; ++i)
+			{
+				a = w + i - (filter_border / 2);
+				// detect for borders of the image
+				//if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
+				//inborder, do filter
+				img_x += filter_GX[tmp2 + i] * pic_grey[tmp3 + a];
+				img_y += filter_GY[tmp2 + i] * pic_grey[tmp3 + a];
+			}
 		}
 	}
+	else
+	{
+		for (register int j = 0; j<filter_border; ++j)
+		{
+			tmp2=j*filter_border;
+			b = h + j - (filter_border / 2);
+			tmp3=b*imgWidth;
+			for (register int i = 0; i<filter_border; ++i)
+			{
+				a = w + i - (filter_border / 2);
+				// detect for borders of the image
+				if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
+				//inborder, do filter
+				img_x += filter_GX[tmp2 + i] * pic_grey[tmp3 + a];
+				img_y += filter_GY[tmp2 + i] * pic_grey[tmp3 + a];
+			}
+		}
+	}
+
 
 	if (img_x<0) img_x=0;
 	if (img_y<0) img_y=0;

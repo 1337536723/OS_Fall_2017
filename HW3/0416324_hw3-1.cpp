@@ -60,18 +60,38 @@ inline unsigned char GaussianFilter(int w, int h)
 {
 	register int tmp=0,tmp2,tmp3;
 	register int a, b;
-	for (register int j = 0; j<filter_border; ++j)
+	if(w>=filter_border&&w<imgWidth-filter_border&&h>=filter_border&&h<imgHeight-filter_border)
 	{
-		tmp2=j*filter_border;
-		b = h + j - (filter_border >>1);
-		tmp3=b*imgWidth;
-		for (register int i = 0; i<filter_border; ++i)
+		for (register int j = 0; j<filter_border; ++j)
 		{
-			a = w + i - (filter_border >>1);
-			// detect for borders of the image
-			if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
-			//inborder, do filter
-			tmp += filter_G[tmp2 + i] * pic_grey[tmp3 + a];
+			tmp2=j*filter_border;
+			b = h + j - (filter_border >>1);
+			tmp3=b*imgWidth;
+			for (register int i = 0; i<filter_border; ++i)
+			{
+				a = w + i - (filter_border >>1);
+				// detect for borders of the image
+				//if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
+				//inborder, do filter
+				tmp += filter_G[tmp2 + i] * pic_grey[tmp3 + a];
+			}
+		}
+	}
+	else
+	{
+		for (register int j = 0; j<filter_border; ++j)
+		{
+			tmp2=j*filter_border;
+			b = h + j - (filter_border >>1);
+			tmp3=b*imgWidth;
+			for (register int i = 0; i<filter_border; ++i)
+			{
+				a = w + i - (filter_border >>1);
+				// detect for borders of the image
+				if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
+				//inborder, do filter
+				tmp += filter_G[tmp2 + i] * pic_grey[tmp3 + a];
+			}
 		}
 	}
 	tmp /= FILTER_SCALE;
@@ -191,7 +211,6 @@ int main()
 		filter_border = (int)sqrt((float)FILTER_SIZE);
 		multithread_grey();
 		multithread_gaussian();
-
 		for (register int j = 0; j<imgHeight; ++j)
 		{
 			tmp3=j*imgWidth;

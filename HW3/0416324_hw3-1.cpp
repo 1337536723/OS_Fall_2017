@@ -11,7 +11,7 @@ using namespace std;
 #define MYRED	2
 #define MYGREEN 1
 #define MYBLUE	0
-int imgWidth, imgHeight, onethread_height;
+int imgWidth, imgHeight, onethread_height, filter_border;
 int FILTER_SIZE;
 int FILTER_SCALE;
 int *filter_G;
@@ -52,23 +52,22 @@ inline unsigned char RGB2grey(int w, int h)
 
 	int tmp2=3 * (h*imgWidth + w) ;
 	int tmp =(pic_in[tmp2+MYRED]+pic_in[tmp2+MYGREEN]+pic_in[tmp2+MYBLUE])/3;
-	if (tmp < 0) tmp = 0;
-	if (tmp > 255) tmp = 255;
-	return (unsigned char)tmp;
+	// if (tmp < 0) tmp = 0;
+	// if (tmp > 255) tmp = 255;
+	return tmp&0xFF;
 }
 inline unsigned char GaussianFilter(int w, int h)
 {
 	register int tmp=0,tmp2,tmp3;
 	register int a, b;
-	int filter_border = (int)sqrt((float)FILTER_SIZE);
 	for (register int j = 0; j<filter_border; ++j)
 	{
 		tmp2=j*filter_border;
-		b = h + j - (filter_border / 2);
+		b = h + j - (filter_border >>1);
 		tmp3=b*imgWidth;
 		for (register int i = 0; i<filter_border; ++i)
 		{
-			a = w + i - (filter_border / 2);
+			a = w + i - (filter_border >>1);
 			// detect for borders of the image
 			if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
 			//inborder, do filter
@@ -76,9 +75,7 @@ inline unsigned char GaussianFilter(int w, int h)
 		}
 	}
 	tmp /= FILTER_SCALE;
-	if (tmp < 0) tmp = 0;
-	if (tmp > 255) tmp = 255;
-	return (unsigned char)tmp;
+	return tmp&0xFF;
 }
 //multithread image processing
 inline void* onethread_process_grey(void* args)
@@ -86,7 +83,7 @@ inline void* onethread_process_grey(void* args)
 	long cur_thread=(long)args;
 	int upper_bound=cur_thread+1;
 	register int tmp;
-	if(cur_thread==THREAD_CNT-1)
+	if(!(cur_thread^THREAD_CNT-1))
 	{
 		for(register int i=cur_thread*onethread_height;i<imgHeight;++i)
 		{
@@ -114,11 +111,11 @@ inline void multithread_grey()
 {
 	int onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
-	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(int cur_thread=0;cur_thread<THREAD_CNT;++cur_thread)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_grey,(void *) cur_thread);
 	}
-	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(int cur_thread=0;cur_thread<THREAD_CNT;++cur_thread)
 	{
 		pthread_mutex_lock(&mutex1);
 		pthread_join(thread_id[cur_thread],NULL);
@@ -130,7 +127,7 @@ inline void* onethread_process_gaussian(void* args)
 	long cur_thread=(long)args;
 	int upper_bound=cur_thread+1;
 	register int tmp;
-	if(cur_thread==THREAD_CNT-1)
+	if(!(cur_thread^THREAD_CNT-1))
 	{
 		for(register int i=cur_thread*onethread_height;i<imgHeight;++i)
 		{
@@ -158,11 +155,11 @@ inline void multithread_gaussian()
 {
 	int /*onethread_width = imgWidth / THREAD_CNT, */onethread_height = imgHeight / THREAD_CNT; //split by row
 	pthread_t thread_id[THREAD_CNT];
-	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(int cur_thread=0;cur_thread<THREAD_CNT;++cur_thread)
 	{
 		pthread_create(&thread_id[cur_thread],NULL,onethread_process_gaussian,(void *) cur_thread);
 	}
-	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
+	for(int cur_thread=0;cur_thread<THREAD_CNT;++cur_thread)
 	{
 		pthread_mutex_lock(&mutex1);
 		pthread_join(thread_id[cur_thread],NULL);
@@ -191,7 +188,7 @@ int main()
 		pic_grey = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
 		pic_blur = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
 		pic_final = (unsigned char*)calloc((tmp3<<1)+tmp3,sizeof(unsigned char));
-
+		filter_border = (int)sqrt((float)FILTER_SIZE);
 		multithread_grey();
 		multithread_gaussian();
 

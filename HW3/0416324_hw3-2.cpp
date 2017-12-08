@@ -111,9 +111,9 @@ inline void multithread_grey()
 	}
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
-		//sem_trywait(&binary_semaphore); //try lock if not locked
+		sem_trywait(&binary_semaphore); //try lock if not locked
 		pthread_join(thread_id[cur_thread],NULL);
-		//sem_post(&binary_semaphore);
+		sem_post(&binary_semaphore);
 	}
 }
 inline void* onethread_process_sobel(void* args)
@@ -158,10 +158,9 @@ inline void multithread_sobel()
 	}
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
-		//sem_trywait(&binary_semaphore); //try lock if not locked
+		sem_trywait(&binary_semaphore); //try lock if not locked
 		pthread_join(thread_id[cur_thread],NULL);
-		cout<<999<<endl;
-		//sem_post(&binary_semaphore);
+		sem_post(&binary_semaphore);
 	}
 
 }
@@ -194,7 +193,7 @@ int main()
 		pic_grey = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
 		pic_blur = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
 		pic_final = (unsigned char*)calloc((tmp3<<1)+tmp3,sizeof(unsigned char));
-		//sem_init(&binary_semaphore,0/*only one process in this hw*/,6);
+		sem_init(&binary_semaphore,0/*only one process in this hw*/,6);
 		//open lock binary semaphore to let one process access the critical section at atime
 		multithread_grey();
 		multithread_sobel();

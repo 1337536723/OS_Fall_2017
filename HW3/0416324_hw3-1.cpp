@@ -61,12 +61,12 @@ inline unsigned char GaussianFilter(int w, int h)
 	register int tmp=0,tmp2,tmp3;
 	register int a, b;
 	int filter_border = (int)sqrt((float)FILTER_SIZE);
-	for (register int j = 0; j<filter_border; j++)
+	for (register int j = 0; j<filter_border; ++j)
 	{
 		tmp2=j*filter_border;
 		b = h + j - (filter_border / 2);
 		tmp3=b*imgWidth;
-		for (register int i = 0; i<filter_border; i++)
+		for (register int i = 0; i<filter_border; ++i)
 		{
 			a = w + i - (filter_border / 2);
 			// detect for borders of the image
@@ -88,10 +88,10 @@ inline void* onethread_process_grey(void* args)
 	register int tmp;
 	if(cur_thread==THREAD_CNT-1)
 	{
-		for(register int i=cur_thread*onethread_height;i<imgHeight;i++)
+		for(register int i=cur_thread*onethread_height;i<imgHeight;++i)
 		{
 			tmp=i*imgWidth;
-			for(register int j=0;j<imgWidth;j++)
+			for(register int j=0;j<imgWidth;++j)
 			{
 				pic_grey[tmp + j] = RGB2grey(j, i);
 			}
@@ -99,10 +99,10 @@ inline void* onethread_process_grey(void* args)
 	}
 	else
 	{
-		for(register int i=cur_thread*onethread_height;i<onethread_height*upper_bound;i++)
+		for(register int i=cur_thread*onethread_height;i<onethread_height*upper_bound;++i)
 		{
 			tmp=i*imgWidth;
-			for(register int j=0;j<imgWidth;j++)
+			for(register int j=0;j<imgWidth;++j)
 			{
 				pic_grey[tmp + j] = RGB2grey(j, i);
 			}
@@ -120,7 +120,9 @@ inline void multithread_grey()
 	}
 	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
+		pthread_mutex_lock(&mutex1);
 		pthread_join(thread_id[cur_thread],NULL);
+		pthread_mutex_unlock(&mutex1);
 	}
 }
 inline void* onethread_process_gaussian(void* args)
@@ -130,10 +132,10 @@ inline void* onethread_process_gaussian(void* args)
 	register int tmp;
 	if(cur_thread==THREAD_CNT-1)
 	{
-		for(register int i=cur_thread*onethread_height;i<imgHeight;i++)
+		for(register int i=cur_thread*onethread_height;i<imgHeight;++i)
 		{
 			tmp=i*imgWidth;
-			for(register int j=0;j<imgWidth;j++)
+			for(register int j=0;j<imgWidth;++j)
 			{
 				pic_blur[tmp + j]=GaussianFilter(j/*col*/,i/*row*/);
 			}
@@ -141,10 +143,10 @@ inline void* onethread_process_gaussian(void* args)
 	}
 	else
 	{
-		for(register int i=cur_thread*onethread_height;i<onethread_height*upper_bound;i++)
+		for(register int i=cur_thread*onethread_height;i<onethread_height*upper_bound;++i)
 		{
 			tmp=i*imgWidth;
-			for(register int j=0;j<imgWidth;j++)
+			for(register int j=0;j<imgWidth;++j)
 			{
 				pic_blur[tmp + j]=GaussianFilter(j/*col*/,i/*row*/);
 			}
@@ -162,7 +164,9 @@ inline void multithread_gaussian()
 	}
 	for(int cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
+		pthread_mutex_lock(&mutex1);
 		pthread_join(thread_id[cur_thread],NULL);
+		pthread_mutex_unlock(&mutex1);
 	}
 }
 int main()
@@ -174,7 +178,7 @@ int main()
 	fscanf(mask, "%d", &FILTER_SCALE);
 
 	filter_G = new int[FILTER_SIZE];
-	for (int i = 0; i<FILTER_SIZE; i++)
+	for (int i = 0; i<FILTER_SIZE; ++i)
 		fscanf(mask, "%d", &filter_G[i]);
 	fclose(mask);
 
@@ -187,18 +191,17 @@ int main()
 		pic_grey = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
 		pic_blur = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
 		pic_final = (unsigned char*)calloc((tmp3<<1)+tmp3,sizeof(unsigned char));
-		//cout<<666<<endl;
-		pthread_mutex_lock(&mutex1);
+
 		multithread_grey();
 		multithread_gaussian();
-		pthread_mutex_unlock(&mutex1);
-		for (register int j = 0; j<imgHeight; j++)
+
+		for (register int j = 0; j<imgHeight; ++j)
 		{
 			tmp3=j*imgWidth;
-			for (register int i = 0; i<imgWidth; i++)
+			for (register int i = 0; i<imgWidth; ++i)
 			{
 				tmp5=tmp3+i;
-				tmp4=3 * (tmp3 + i);
+				tmp4=3 * (tmp5);
 				pic_final[tmp4 + MYRED] = pic_blur[tmp5];
 				pic_final[tmp4 + MYGREEN] = pic_blur[tmp5];
 				pic_final[tmp4 + MYBLUE] = pic_blur[tmp5];

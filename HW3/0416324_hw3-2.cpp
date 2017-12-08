@@ -13,7 +13,8 @@ using namespace std;
 int imgWidth, imgHeight, onethread_height;
 int FILTER_SIZE;
 int FILTER_SCALE;
-int *filter_G;
+int *filter_GX;
+int *filter_GY;
 
 const char *inputfile_name[5] =
 {
@@ -25,11 +26,11 @@ const char *inputfile_name[5] =
 };
 const char *outputBlur_name[5] =
 {
-	"Blur1.bmp",
-	"Blur2.bmp",
-	"Blur3.bmp",
-	"Blur4.bmp",
-	"Blur5.bmp"
+	"Sobel1.bmp",
+	"Sobel2.bmp",
+	"Sobel3.bmp",
+	"Sobel4.bmp",
+	"Sobel5.bmp"
 };
 
 unsigned char *pic_in, *pic_grey, *pic_blur, *pic_final;
@@ -44,6 +45,28 @@ inline unsigned char RGB2grey(int w, int h)
 
 inline unsigned char sobel_filter(int w, int h)
 {
+	register int tmp=0,tmp2,tmp3;
+	register int a, b;
+	int img_x=0,img_y=0;
+	int filter_border = (int)sqrt((float)FILTER_SIZE);
+	for (register int j = 0; j<filter_border; j++)
+	{
+		tmp2=j*filter_border;
+		b = h + j - (filter_border / 2);
+		tmp3=b*imgWidth;
+		for (register int i = 0; i<filter_border; i++)
+		{
+			a = w + i - (filter_border / 2);
+			// detect for borders of the image
+			if(a<0 || b<0 || a>=imgWidth || b>=imgHeight) continue;
+			//inborder, do filter
+			img_x += filter_GX[tmp2 + i] * pic_grey[tmp3 + a];
+			img_y += filter_GY[tmp2 + i] * pic_grey[tmp3 + a];
+		}
+	}
+
+	if (img_x<0) img_x=0;
+	if (img_y<0) img_y=0;
 	if (tmp < 0) tmp = 0;
 	if (tmp > 255) tmp = 255;
 	return (unsigned char)tmp;
@@ -58,7 +81,6 @@ inline void* onethread_process_grey(void* args)
 	register int tmp;
 	if(cur_thread==THREAD_CNT-1)
 	{
-		//printf("cur thread last %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<imgHeight;i++)
 		{
 			tmp=i*imgWidth;
@@ -70,13 +92,12 @@ inline void* onethread_process_grey(void* args)
 	}
 	else
 	{
-			//printf("cur thread %ld\n",cur_thread);
 		for(int i=cur_thread*onethread_height;i<onethread_height*upper_bound;i++)
 		{
 			tmp=i*imgWidth;
 			for(int j=0;j<imgWidth;j++)
 			{
-				pic_grey[tmp=i*imgWidth; + j] = RGB2grey(j, i);
+				pic_grey[tmp=i*imgWidth + j] = RGB2grey(j, i);
 			}
 		}
 	}
@@ -133,7 +154,7 @@ inline void multithread_sobel()
 
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
-		pthread_create(&thread_id[cur_thread],NULL,onethread_process_gaussian,(void *) cur_thread);
+		pthread_create(&thread_id[cur_thread],NULL,onethread_process_sobel,(void *) cur_thread);
 	}
 	for(long  cur_thread=0;cur_thread<THREAD_CNT;cur_thread++)
 	{
@@ -145,13 +166,18 @@ int main()
 {
 	// read mask file
 	FILE* mask;
-	mask = fopen("mask_Gaussian.txt", "r");
+	mask = fopen("mask_Sobel.txt", "r");
 	fscanf(mask, "%d", &FILTER_SIZE);
-	fscanf(mask, "%d", &FILTER_SCALE);
+	//fscanf(mask, "%d", &FILTER_SCALE);
 
-	filter_G = new int[FILTER_SIZE];
+	filter_GX = new int[FILTER_SIZE];
+	filter_GY = new int[FILTER_SIZE];
 	for (int i = 0; i<FILTER_SIZE; i++)
-		fscanf(mask, "%d", &filter_G[i]);
+		fscanf(mask, "%d", &filter_GX[i]);
+
+	for (int i = 0; i<FILTER_SIZE; i++)
+		fscanf(mask, "%d", &filter_GY[i]);
+
 	fclose(mask);
 	register int tmp3,tmp4;
 	BmpReader* bmpReader = new BmpReader();
@@ -160,9 +186,9 @@ int main()
 		// read input BMP file
 		pic_in = bmpReader->ReadBMP(inputfile_name[k], &imgWidth, &imgHeight);
 		// allocate space for output image
-		pic_grey = (unsigned char*)malloc(imgWidth*imgHeight*sizeof(unsigned char));
-		pic_blur = (unsigned char*)malloc(imgWidth*imgHeight*sizeof(unsigned char));
-		pic_final = (unsigned char*)malloc(3*imgWidth*imgHeight*sizeof(unsigned char));
+		pic_grey = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
+		pic_blur = (unsigned char*)calloc(tmp3,sizeof(unsigned char));
+		pic_final = (unsigned char*)calloc((tmp3<<1)+tmp3,sizeof(unsigned char));
 		pthread_mutex_lock(&mutex1);
 		multithread_grey();
 		multithread_sobel();

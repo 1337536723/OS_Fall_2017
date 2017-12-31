@@ -41,11 +41,11 @@ int main(int argc, char const *argv[])
     }
     for(int i=0;i<PAGE_TABLE_SIZE;i++)
     {
-        page_table.pb(-1); //use -1 for null
+        page_table.pb(-1); //use -1 for null(result in page fault) and 1 for exist
     }
-    for(int i=0;i<PHYSICAL_MEMORY_SIZE;i++)
+    for(int i=0;i<PHYSICAL_MEMORY_SIZE;i++) //use -1 for null
     {
-
+        phy_memory.pb(-1); //the real memory 1d
     }
     //backing storage
     FILE* BACK_fptr;
@@ -93,17 +93,18 @@ int main(int argc, char const *argv[])
         }
         else //TLB miss find the page table and load into TLB by using LRU
         {
-            for(int i=0;i<PAGE_TABLE_SIZE;i++)
+            if(page_table[page_num_addr]==-1)//A page table miss, fetch from BACKING and reload to physical memory, update such frame in  phy mem
+            //and update the page table to indicate the page can be found as well
             {
-                if(page_table[i]!=-1) //An page table hit
-                {
-                    frame_num_addr=page_table[i];
-                }
-                else
-                {
-
-                }
+                fseek(BACK_fptr, 256, frame_num_addr*256);
+                fread(s, 1, 256, fPtr); //bin file read byte by byte
+                page_table[page_num_addr]=1;
             }
+            else //A page table hit
+            {
+                phy_addr=page_table[page_num_addr]*FRAME_SIZE+offset_addr;
+            }
+
         }
         //page fault, load from BACKING STORE.
         tlb_miss=1;

@@ -1,7 +1,8 @@
 #include <bits/stdc++.h>
 #define TLB_SIZE 16
 #define PAGE_TABLE_SIZE 256
-#define PHYSICAL_MEMORY_SIZE 256
+#define PHYSICAL_MEMORY_SIZE 65536
+#define FRAME_SIZE 256
 #define pb push_back
 using namespace std;
 /**************************************************************************************
@@ -17,24 +18,23 @@ Assume the TLB, page table, and physical memory is empty at the beginning.
 Struecture: 3vector
 
 **************************************************************************************/
-
 struct table_content
 {
-    int last_access_time,page_number,frame_number;
+    int last_access_time, page_number, frame_number;
 };
+//required coumter and data structure
+vector<table_content> TLB;
+vector<int> page_table;
+vector<int> phy_memory;
 
 int main(int argc, char const *argv[])
 {
-    //required coumter and data structure
-    int tcase=0,tlb_miss=0,page_fault=0;
-    vector<table_content> TLB;
-    vector<int> page_table;
-    vector<int> phy_memory;
+
     //init
     for(int i=0;i<TLB_SIZE;i++)
     {
         table_content one_tbc;
-        one_tbc.last_access_time=0;
+        one_tbc.last_access_time=-1; //use -1 for null
         one_tbc.page_number=0;
         one_tbc.frame_number=0;
         TLB.pb(one_tbc);
@@ -42,7 +42,10 @@ int main(int argc, char const *argv[])
     for(int i=0;i<PAGE_TABLE_SIZE;i++)
     {
         page_table.pb(-1); //use -1 for null
-        phy_memory.pb(-1); //use -1 for null
+    }
+    for(int i=0;i<PHYSICAL_MEMORY_SIZE;i++)
+    {
+
     }
     //backing storage
     FILE* BACK_fptr;
@@ -55,8 +58,10 @@ int main(int argc, char const *argv[])
     ofptr.open("result.txt",std::ofstream::out);
     //statistical data
     bool first=0;
-    tlb_miss=0;
-    page_fault=0;
+    bool tlb_miss_flg=1, page_fault_flg=1;
+    int tcase=0, tlb_miss=0, page_fault=0, timestamp=0;
+    //address data with bitwise operation
+    int page_num_addr, offset_addr, frame_num_addr, phy_addr;
     //operation and algorithm implementation
     while(fptr)
     {
@@ -69,10 +74,40 @@ int main(int argc, char const *argv[])
         }
         cout<<"Fptr reads "<<tmp<<endl;
         //search the TLB first
+        page_num_addr=(tmp&0xFF00)>>8;
+        offset_addr=(tmp&0xFF);
+        for(int i=0;i<TLB_SIZE;i++)
+        {
+            if(TLB[i].last_access_time!=-1
+            &&TLB[i]==page_num_addr)
+            {
+                tlb_miss=0;
+                frame_num_addr=TLB[i].frame_number;
+                TLB[i].last_access_time=timestamp;
+                break;
+            }
+        }
+        if(tlb_miss==0) //TLB hit, directly fetch and access the physical memory
+        {
+            frame_num_addr*FRAME_SIZE+offset_addr;
+        }
+        else //TLB miss find the page table and load into TLB by using LRU
+        {
+            for(int i=0;i<PAGE_TABLE_SIZE;i++)
+            {
+                if(page_table[i]!=-1) //An page table hit
+                {
+                    frame_num_addr=page_table[i];
+                }
+                else
+                {
 
-        //TLB miss find the page table and load in
-
+                }
+            }
+        }
         //page fault, load from BACKING STORE.
+        tlb_miss=1;
+        timestamp++;
     }
 
     fclose(BACK_fptr);

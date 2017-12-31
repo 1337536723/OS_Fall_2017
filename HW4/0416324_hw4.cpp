@@ -89,7 +89,7 @@ int main(int argc, char const *argv[])
         }
         if(tlb_miss==0) //TLB hit, directly fetch and access the physical memory
         {
-            frame_num_addr*FRAME_SIZE+offset_addr;
+            phy_addr=frame_num_addr*FRAME_SIZE+offset_addr;
         }
         else //TLB miss find the page table and load into TLB by using LRU
         {
@@ -108,6 +108,7 @@ int main(int argc, char const *argv[])
         //page fault, load from BACKING STORE.
         tlb_miss=1;
         timestamp++;
+        //reload by LRU
     }
 
     fclose(BACK_fptr);

@@ -25,7 +25,7 @@ struct table_content
 //required coumter and data structure
 vector<table_content> TLB;
 vector<int> page_table;
-vector<vector<int> > phy_memory;
+vector<vector<char> > phy_memory;
 char tmp_loaded_data[FRAME_SIZE];
 //LRU sorting TLB[0] has the earliest access time
 bool LRU_compare(table_content table_a, table_content table_b)
@@ -95,6 +95,7 @@ int main(int argc, char const *argv[])
             if(tlb_miss_flg==0) //TLB hit, directly fetch and access the physical memory
             {
                 phy_addr=frame_num_addr*FRAME_SIZE+offset_addr;
+                accessed_value=phy_memory[frame_num_addr][offset_addr];
                 tlb_hits++;
             }
             else //TLB miss find the page table and load into TLB by using LRU
@@ -124,6 +125,7 @@ int main(int argc, char const *argv[])
                 sort(TLB.begin(), TLB.end(), LRU_compare);
                 TLB[0].page_number=page_num_addr;
                 TLB[0].frame_number=page_table[page_num_addr];
+                TLB[0].last_access_time=timestamp;
             }
             int tmp_2=(int) accessed_value&0xFF;
             ofptr<<phy_addr<<" "<<accessed_value<<endl;

@@ -35,7 +35,7 @@ bool LRU_compare(table_content table_a, table_content table_b)
 //
 int main(int argc, char const *argv[])
 {
-    //init
+    /*************************************initl**************************************/
     for(int i=0;i<TLB_SIZE;i++)
     {
         table_content one_tbc;
@@ -53,8 +53,7 @@ int main(int argc, char const *argv[])
     {
         phy_memory[i].resize(0); //the real memory 1d
     }
-    tmp_loaded_data.resize(256); //data used for loading data from backing storage to physical memory
-    //backing storage
+    /**********************************backing storage**************************************/
     FILE* BACK_fptr;
     BACK_fptr = fopen(argv[1],"rb"); //read the binary
     //address
@@ -63,13 +62,13 @@ int main(int argc, char const *argv[])
     //output result
     ofstream ofptr;
     ofptr.open("result.txt",std::ofstream::out);
-    //statistical data
+    /********************************statistical data**********************************/
     bool first=0;
     bool tlb_miss_flg=1, page_fault_flg=1;
     int tcase=0, tlb_hits=0, page_fault=0, timestamp=0, accessed_value=0;
-    //address data with bitwise operation
+    /*********************address data with bitwise operation*************************/
     int page_num_addr, offset_addr, frame_num_addr, phy_addr;
-    //operation and algorithm implementation
+    /****************operation and algorithm implementation***************************/
     while(fptr)
     {
         int tmp;
@@ -101,11 +100,12 @@ int main(int argc, char const *argv[])
         }
         else //TLB miss find the page table and load into TLB by using LRU
         {
-            //A page table miss, fetch from BACKING and reload to physical memory, update such frame in  phy mem
-            //and update the page table to indicate the page can be found as well
+            /*A page table miss, fetch from BACKING and reload to physical memory, update such frame in phy mem
+            and update the page table to indicate the page can be found as well*/
             if(page_table[page_num_addr]==-1)
             {
-                fseek(BACK_fptr, 256, frame_num_addr*256);
+                //the memory is byte-addressable, the char fits such requirements
+                fseek(BACK_fptr, frame_num_addr*256, SEEK_SET);
                 fread(tmp_loaded_data, sizeof(char), 256, BACK_fptr); //bin file read byte by byte
                 page_table[page_num_addr]=page_fault; //update the existance of the corresponding memory frame to say it exisis in phy mem
                 for(int i=0;i<FRAME_SIZE;i++)
@@ -125,12 +125,13 @@ int main(int argc, char const *argv[])
             sort(TLB.begin(), TLB.end(), LRU_compare);
             TLB[0].page_number=page_num_addr;
             TLB[0].frame_number=page_table[page_num_addr];
-        }
 
+        }
+        ofptr<<phy_addr<<" "<<accessed_value<<endl;
         tlb_miss=1;
         timestamp++;
     }
-    
+    ofptr<<"TLB hits: "<<tlb_hits<<endl<<"Page Faults: "<<page_fault;
     fclose(ofptr);
     fclose(BACK_fptr);
     fptr.close();

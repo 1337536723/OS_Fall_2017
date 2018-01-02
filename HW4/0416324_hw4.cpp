@@ -49,10 +49,6 @@ int main(int argc, char const *argv[])
         page_table.pb(-1); //use -1 for null(result in page fault) and 1 for exist
     }
     phy_memory.resize(256);
-    /*for(int i=0;i<PHYSICAL_MEMORY_SIZE;i++) //use -1 for null
-    {
-        phy_memory[i].resize(0); //the real memory 1d
-    }*/
     /**********************************backing storage**************************************/
     FILE* BACK_fptr;
     BACK_fptr = fopen(argv[1],"rb"); //read the binary
@@ -61,7 +57,7 @@ int main(int argc, char const *argv[])
     fptr.open(argv[2]);
     //output result
     ofstream ofptr;
-    ofptr.open("result.txt",std::ofstream::out);
+    ofptr.open("results.txt",std::ofstream::out);
     /********************************statistical data**********************************/
     bool first=0;
     bool tlb_miss_flg=1, page_fault_flg=1;
@@ -71,7 +67,6 @@ int main(int argc, char const *argv[])
     /****************operation and algorithm implementation***************************/
     while(fptr>>tmp)
     {
-        cout<<"Fptr reads "<<tmp<<endl;
         if(!first)
         {
             first=1;

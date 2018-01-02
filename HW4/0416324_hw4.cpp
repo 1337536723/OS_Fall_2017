@@ -49,10 +49,10 @@ int main(int argc, char const *argv[])
         page_table.pb(-1); //use -1 for null(result in page fault) and 1 for exist
     }
     phy_memory.resize(256);
-    for(int i=0;i<PHYSICAL_MEMORY_SIZE;i++) //use -1 for null
+    /*for(int i=0;i<PHYSICAL_MEMORY_SIZE;i++) //use -1 for null
     {
         phy_memory[i].resize(0); //the real memory 1d
-    }
+    }*/
     /**********************************backing storage**************************************/
     FILE* BACK_fptr;
     BACK_fptr = fopen(argv[1],"rb"); //read the binary
@@ -67,72 +67,71 @@ int main(int argc, char const *argv[])
     bool tlb_miss_flg=1, page_fault_flg=1;
     int tcase=0, tlb_hits=0, page_fault=0, timestamp=0, accessed_value=0;
     /*********************address data with bitwise operation*************************/
-    int page_num_addr, offset_addr, frame_num_addr, phy_addr;
+    int tmp, page_num_addr, offset_addr, frame_num_addr, phy_addr;
     /****************operation and algorithm implementation***************************/
-    while(fptr)
+    while(fptr>>tmp)
     {
-        int tmp;
-        fptr>>tmp;
+        cout<<"Fptr reads "<<tmp<<endl;
         if(!first)
         {
             first=1;
             tcase=tmp;
         }
-        cout<<"Fptr reads "<<tmp<<endl;
-        //search the TLB first
-        page_num_addr=(tmp&0xFF00)>>8;
-        offset_addr=(tmp&0xFF);
-        for(int i=0;i<TLB_SIZE;i++)
+        else
         {
-            if(TLB[i].last_access_time!=-1
-            &&TLB[i].page_number==page_num_addr)
+            page_num_addr=(tmp&0xFF00)>>8;
+            offset_addr=(tmp&0xFF);
+            for(int i=0;i<TLB_SIZE;i++)
             {
-                tlb_miss=0;
-                frame_num_addr=TLB[i].frame_number;
-                TLB[i].last_access_time=timestamp;
-                break;
-            }
-        }
-        if(tlb_miss==0) //TLB hit, directly fetch and access the physical memory
-        {
-            phy_addr=frame_num_addr*FRAME_SIZE+offset_addr;
-            tlb_hits++;
-        }
-        else //TLB miss find the page table and load into TLB by using LRU
-        {
-            /*A page table miss, fetch from BACKING and reload to physical memory, update such frame in phy mem
-            and update the page table to indicate the page can be found as well*/
-            if(page_table[page_num_addr]==-1)
-            {
-                //the memory is byte-addressable, the char fits such requirements
-                fseek(BACK_fptr, frame_num_addr*256, SEEK_SET);
-                fread(tmp_loaded_data, sizeof(char), 256, BACK_fptr); //bin file read byte by byte
-                page_table[page_num_addr]=page_fault; //update the existance of the corresponding memory frame to say it exisis in phy mem
-                for(int i=0;i<FRAME_SIZE;i++)
+                if(TLB[i].last_access_time!=-1
+                &&TLB[i].page_number==page_num_addr)
                 {
-                    phy_memory[page_fault].pb(tmp_loaded_data[i]);
+                    tlb_miss_flg=0;
+                    frame_num_addr=TLB[i].frame_number;
+                    TLB[i].last_access_time=timestamp;
+                    break;
                 }
-                phy_addr=page_table[page_num_addr]*FRAME_SIZE+offset_addr;
-                accessed_value=phy_memory[page_table[page_num_addr]][offset_addr];
-                page_fault++;
             }
-            else //A page table hit
+            if(tlb_miss_flg==0) //TLB hit, directly fetch and access the physical memory
             {
-                phy_addr=page_table[page_num_addr]*FRAME_SIZE+offset_addr;
-                accessed_value=phy_memory[page_table[page_num_addr]][offset_addr];
+                phy_addr=frame_num_addr*FRAME_SIZE+offset_addr;
+                tlb_hits++;
             }
-            //Update the TLB by using LRU
-            sort(TLB.begin(), TLB.end(), LRU_compare);
-            TLB[0].page_number=page_num_addr;
-            TLB[0].frame_number=page_table[page_num_addr];
+            else //TLB miss find the page table and load into TLB by using LRU
+            {
+                /*A page table miss, fetch from BACKING and reload to physical memory, update such frame in phy mem
+                and update the page table to indicate the page can be found as well*/
+                if(page_table[page_num_addr]==-1)
+                {
+                    //the memory is byte-addressable, the char fits such requirements
+                    fseek(BACK_fptr, frame_num_addr*256, SEEK_SET);
+                    fread(tmp_loaded_data, sizeof(char), 256, BACK_fptr); //bin file read byte by byte
+                    page_table[page_num_addr]=page_fault; //update the existance of the corresponding memory frame to say it exisis in phy mem
+                    for(int i=0;i<FRAME_SIZE;i++)
+                    {
+                        phy_memory[page_fault].pb(tmp_loaded_data[i]);
+                    }
+                    phy_addr=page_table[page_num_addr]*FRAME_SIZE+offset_addr;
+                    accessed_value=phy_memory[page_table[page_num_addr]][offset_addr];
+                    page_fault++;
+                }
+                else //A page table hit
+                {
+                    phy_addr=page_table[page_num_addr]*FRAME_SIZE+offset_addr;
+                    accessed_value=phy_memory[page_table[page_num_addr]][offset_addr];
+                }
+                //Update the TLB by using LRU
+                sort(TLB.begin(), TLB.end(), LRU_compare);
+                TLB[0].page_number=page_num_addr;
+                TLB[0].frame_number=page_table[page_num_addr];
 
+            }
+            ofptr<<phy_addr<<" "<<accessed_value<<endl;
+            tlb_miss_flg=1;
+            timestamp++;
         }
-        ofptr<<phy_addr<<" "<<accessed_value<<endl;
-        tlb_miss=1;
-        timestamp++;
     }
     ofptr<<"TLB hits: "<<tlb_hits<<endl<<"Page Faults: "<<page_fault;
-    fclose(ofptr);
     fclose(BACK_fptr);
     fptr.close();
     ofptr.close();

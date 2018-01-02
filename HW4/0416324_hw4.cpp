@@ -15,7 +15,7 @@ Assume the TLB, page table, and physical memory is empty at the beginning.
 • 2^8 frames
 • Physical memory of 65536 bytes (256 frames * 256-byte frame size)
 
-Struecture: 3vector
+Struecture: 3vectors
 
 **************************************************************************************/
 struct table_content
@@ -25,11 +25,16 @@ struct table_content
 //required coumter and data structure
 vector<table_content> TLB;
 vector<int> page_table;
-vector<int> phy_memory;
-
+vector<vector<int> > phy_memory;
+int tmp_loaded_data[FRAME_SIZE];
+//LRU sorting TLB[0] has the earliest access time
+bool LRU_compare(table_content table_a, table_content table_b)
+{
+    return table_a.last_access_time < table_b.last_access_time;
+}
+//
 int main(int argc, char const *argv[])
 {
-
     //init
     for(int i=0;i<TLB_SIZE;i++)
     {
@@ -43,10 +48,12 @@ int main(int argc, char const *argv[])
     {
         page_table.pb(-1); //use -1 for null(result in page fault) and 1 for exist
     }
+    phy_memory.resize(256);
     for(int i=0;i<PHYSICAL_MEMORY_SIZE;i++) //use -1 for null
     {
-        phy_memory.pb(-1); //the real memory 1d
+        phy_memory[i].resize(0); //the real memory 1d
     }
+    tmp_loaded_data.resize(256); //data used for loading data from backing storage to physical memory
     //backing storage
     FILE* BACK_fptr;
     BACK_fptr = fopen(argv[1],"rb"); //read the binary
@@ -59,7 +66,7 @@ int main(int argc, char const *argv[])
     //statistical data
     bool first=0;
     bool tlb_miss_flg=1, page_fault_flg=1;
-    int tcase=0, tlb_miss=0, page_fault=0, timestamp=0;
+    int tcase=0, tlb_hits=0, page_fault=0, timestamp=0;
     //address data with bitwise operation
     int page_num_addr, offset_addr, frame_num_addr, phy_addr;
     //operation and algorithm implementation
@@ -79,7 +86,7 @@ int main(int argc, char const *argv[])
         for(int i=0;i<TLB_SIZE;i++)
         {
             if(TLB[i].last_access_time!=-1
-            &&TLB[i]==page_num_addr)
+            &&TLB[i].page_number==page_num_addr)
             {
                 tlb_miss=0;
                 frame_num_addr=TLB[i].frame_number;
@@ -90,26 +97,34 @@ int main(int argc, char const *argv[])
         if(tlb_miss==0) //TLB hit, directly fetch and access the physical memory
         {
             phy_addr=frame_num_addr*FRAME_SIZE+offset_addr;
+            tlb_hits++;
         }
         else //TLB miss find the page table and load into TLB by using LRU
         {
-            if(page_table[page_num_addr]==-1)//A page table miss, fetch from BACKING and reload to physical memory, update such frame in  phy mem
+            //A page table miss, fetch from BACKING and reload to physical memory, update such frame in  phy mem
             //and update the page table to indicate the page can be found as well
+            if(page_table[page_num_addr]==-1)
             {
                 fseek(BACK_fptr, 256, frame_num_addr*256);
-                fread(s, 1, 256, fPtr); //bin file read byte by byte
-                page_table[page_num_addr]=1;
+                fread(tmp_loaded_data, sizeof(char), 256, BACK_fptr); //bin file read byte by byte
+                page_table[page_num_addr]=1; //update the existance of the corresponding memory frame to say it exisis in phy mem
+                for(int i=0;i<FRAME_SIZE;i++)
+                {
+                    phy_memory[page_num_addr].pb(tmp_loaded_data[i]);
+                }
+                page_fault++;
             }
             else //A page table hit
             {
                 phy_addr=page_table[page_num_addr]*FRAME_SIZE+offset_addr;
             }
-
+            //Update the TLB by using LRU
+            sort(TLB.begin(), TLB.end(), LRU_compare);
+            TLB[0].page_number=
         }
         //page fault, load from BACKING STORE.
         tlb_miss=1;
         timestamp++;
-        //reload by LRU
     }
 
     fclose(BACK_fptr);

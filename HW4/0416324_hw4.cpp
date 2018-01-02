@@ -66,7 +66,7 @@ int main(int argc, char const *argv[])
     //statistical data
     bool first=0;
     bool tlb_miss_flg=1, page_fault_flg=1;
-    int tcase=0, tlb_hits=0, page_fault=0, timestamp=0;
+    int tcase=0, tlb_hits=0, page_fault=0, timestamp=0, accessed_value=0;
     //address data with bitwise operation
     int page_num_addr, offset_addr, frame_num_addr, phy_addr;
     //operation and algorithm implementation
@@ -107,26 +107,31 @@ int main(int argc, char const *argv[])
             {
                 fseek(BACK_fptr, 256, frame_num_addr*256);
                 fread(tmp_loaded_data, sizeof(char), 256, BACK_fptr); //bin file read byte by byte
-                page_table[page_num_addr]=1; //update the existance of the corresponding memory frame to say it exisis in phy mem
+                page_table[page_num_addr]=page_fault; //update the existance of the corresponding memory frame to say it exisis in phy mem
                 for(int i=0;i<FRAME_SIZE;i++)
                 {
-                    phy_memory[page_num_addr].pb(tmp_loaded_data[i]);
+                    phy_memory[page_fault].pb(tmp_loaded_data[i]);
                 }
+                phy_addr=page_table[page_num_addr]*FRAME_SIZE+offset_addr;
+                accessed_value=phy_memory[page_table[page_num_addr]][offset_addr];
                 page_fault++;
             }
             else //A page table hit
             {
                 phy_addr=page_table[page_num_addr]*FRAME_SIZE+offset_addr;
+                accessed_value=phy_memory[page_table[page_num_addr]][offset_addr];
             }
             //Update the TLB by using LRU
             sort(TLB.begin(), TLB.end(), LRU_compare);
-            TLB[0].page_number=
+            TLB[0].page_number=page_num_addr;
+            TLB[0].frame_number=page_table[page_num_addr];
         }
-        //page fault, load from BACKING STORE.
+
         tlb_miss=1;
         timestamp++;
     }
-
+    
+    fclose(ofptr);
     fclose(BACK_fptr);
     fptr.close();
     ofptr.close();

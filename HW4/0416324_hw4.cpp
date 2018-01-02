@@ -26,7 +26,7 @@ struct table_content
 vector<table_content> TLB;
 vector<int> page_table;
 vector<vector<int> > phy_memory;
-int tmp_loaded_data[FRAME_SIZE];
+char tmp_loaded_data[FRAME_SIZE];
 //LRU sorting TLB[0] has the earliest access time
 bool LRU_compare(table_content table_a, table_content table_b)
 {
@@ -104,7 +104,7 @@ int main(int argc, char const *argv[])
                 if(page_table[page_num_addr]==-1)
                 {
                     //the memory is byte-addressable, the char fits such requirements
-                    fseek(BACK_fptr, frame_num_addr*256, SEEK_SET);
+                    fseek(BACK_fptr, page_num_addr*256, SEEK_SET);
                     fread(tmp_loaded_data, sizeof(char), 256, BACK_fptr); //bin file read byte by byte
                     page_table[page_num_addr]=page_fault; //update the existance of the corresponding memory frame to say it exisis in phy mem
                     for(int i=0;i<FRAME_SIZE;i++)
@@ -124,8 +124,8 @@ int main(int argc, char const *argv[])
                 sort(TLB.begin(), TLB.end(), LRU_compare);
                 TLB[0].page_number=page_num_addr;
                 TLB[0].frame_number=page_table[page_num_addr];
-
             }
+            int tmp_2=(int) accessed_value&0xFF;
             ofptr<<phy_addr<<" "<<accessed_value<<endl;
             tlb_miss_flg=1;
             timestamp++;

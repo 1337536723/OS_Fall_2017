@@ -117,6 +117,14 @@ int main(int argc, char const *argv[])
                     accessed_value=phy_memory[page_table[page_num_addr]][offset_addr];
                 }
                 //Update the TLB by using LRU
+                int cnt=0;
+                for(int i=0;i<16;i++)
+                {
+                    if(TLB[i].last_access_time!=-1)
+                        cnt++;
+                    cout<<TLB[i].page_number<<","<<TLB[i].frame_number<<","<<TLB[i].last_access_time<<"||";
+                }
+                cout<<endl;
                 sort(TLB.begin(), TLB.end(), LRU_compare);
                 TLB[0].page_number=page_num_addr;
                 TLB[0].frame_number=page_table[page_num_addr];

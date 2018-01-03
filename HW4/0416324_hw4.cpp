@@ -5,19 +5,6 @@
 #define FRAME_SIZE 256
 #define pb push_back
 using namespace std;
-/**************************************************************************************
-Specifics
-Assume the TLB, page table, and physical memory is empty at the beginning.
-• 2^4 entries in the TLB (Use LRU replacement Algorithm)
-• 2^8 entries in the page table
-• Page size of 2^8 bytes
-• Frame size of 2^8 bytes
-• 2^8 frames
-• Physical memory of 65536 bytes (256 frames * 256-byte frame size)
-
-Struecture: 3vectors
-
-**************************************************************************************/
 struct table_content
 {
     int last_access_time, page_number, frame_number;
@@ -48,7 +35,7 @@ int main(int argc, char const *argv[])
     {
         page_table.pb(-1); //use -1 for null(result in page fault) and 1 for exist
     }
-    phy_memory.resize(256);
+    phy_memory.resize(256); //init a 2d memory architecture and use pb for the second dimension
     /**********************************backing storage**************************************/
     FILE* BACK_fptr;
     BACK_fptr = fopen(argv[1],"rb"); //read the binary
@@ -70,7 +57,6 @@ int main(int argc, char const *argv[])
         if(!first)
         {
             first=1;
-            tcase=tmp;
         }
         else
         {
@@ -149,3 +135,15 @@ int main(int argc, char const *argv[])
     ofptr.close();
     return 0;
 }
+/**************************************************************************************
+Specs
+Assume the TLB, page table, and physical memory is empty at the beginning.
+• 2^4 entries in the TLB (Use LRU replacement Algorithm)
+• 2^8 entries in the page table
+• Page size of 2^8 bytes
+• Frame size of 2^8 bytes
+• 2^8 frames
+• Physical memory of 65536 bytes (256 frames * 256-byte frame size)
+
+Struecture: 3vectors
+**************************************************************************************/
